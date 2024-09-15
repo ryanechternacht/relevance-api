@@ -1,0 +1,6 @@
+If the following contains any combination of:
+- a possible pain point
+- a possible solution
+- a call to action, such as booking a meeting, asking if i have this problem, scheduling a call, etc
+
+Mark as a sales email by saying Yes. Otherwise say No. only the yes or no, no subtext, context, or any other text.
