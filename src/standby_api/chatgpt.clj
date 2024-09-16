@@ -1,4 +1,4 @@
-(ns sharepage-email.chatgpt
+(ns standby-api.chatgpt
   (:require [cheshire.core :as json]
             [clj-http.client :as http]))
 

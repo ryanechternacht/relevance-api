@@ -1,4 +1,4 @@
-(ns sharepage-email.middleware.config
+(ns standby-api.middleware.config
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]))
 

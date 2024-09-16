@@ -1,6 +1,6 @@
-(ns sharepage-email.migratus
+(ns standby-api.migratus
   (:require [migratus.core :as migratus]
-            [sharepage-email.middleware.config :as config]))
+            [standby-api.middleware.config :as config]))
   
   ;; TODO how do I roll these out to AWS?
   ;; Ideally I'd port into an AWS repl. In reality I'll probably just

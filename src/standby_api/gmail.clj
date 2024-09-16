@@ -1,7 +1,7 @@
-(ns sharepage-email.gmail
+(ns standby-api.gmail
   (:require [clj-http.client :as http]
             [clojure.string :as str]
-            [sharepage-email.chatgpt :as chatgpt])
+            [standby-api.chatgpt :as chatgpt])
   (:import java.util.Base64))
 
 (def access-token "ya29.a0AcM612xD_xGXYAJWFGh6r9UvCErtmqev2GCKAIxcf2-52cNLxLFe5Hvb9htNoiUReTNsdaoIMsaeqgySN99hCyDia7c0uX5gRZRZ_WLmHHd8gVkehW4fcl9mGDwRpu4jU3-QmZb4xzH5cwlrVRtSZvX7hfm-0Lg6N3nyQZNVaCgYKAX0SARESFQHGX2Mi68f2gU8z8qtew9s0IiTXzQ0175")
