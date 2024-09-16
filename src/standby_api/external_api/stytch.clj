@@ -18,6 +18,7 @@
    user or nil if the session isn't valid"
   [{:keys [base-url project secret]}
    session-token]
+  (println "auth session" session-token)
   (try
     (-> (make-stytch-call (u/make-link base-url "sessions/authenticate")
                           project
@@ -25,9 +26,9 @@
                           {:session_token session-token
                            :session_duration_minutes default-session-timeout-minutes})
         :body
-        :member)
+        :user)
     (catch Exception _
-      ;; (println "authenticate-session exception" _)
+      (println "authenticate-session exception" _)
       nil)))
 
 ;; (defn authenticate-magic-link

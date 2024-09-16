@@ -15,11 +15,11 @@
       (h/order-by :user_account.first_name :user_account.last_name)))
 
 (defn get-by-email [db email]
-  (let [query (-> base-user-query
+  (let [query (-> (base-user-query)
                   (h/where [:= :user_account.email email]))]
     (->> query
-         (db/->>execute db)
-         first)))
+         (db/->>execute db))))
+        ;;  first)))
 
 (defn update-user-from-stytch [db email first-name last-name image]
   (try 
@@ -43,4 +43,8 @@
   (let [public-link (get-public-link)
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image :public_link)
-                  (h/values [[email first-name last-name image public-link]]))]))
+                  (h/values [[email first-name last-name image public-link]])
+                  (#(apply h/returning % user-columns)))]
+    (->> query
+         (db/->>execute db)
+         first)))

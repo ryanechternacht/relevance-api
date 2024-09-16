@@ -8,8 +8,8 @@
   ;; TODO only on local
   ;; this is needed because we can only set use http for localhost in stytch, and I haven't setup
   ;; https locally yet
-  (println "for browser:" "buyersphere-session" session_token ".buyersphere-local.com")
-  (println "for postman:" (format "buyersphere-session=%s" session_token))
+  (println "for browser:" "standby-session" session_token ".buyersphere-local.com")
+  (println "for postman:" (format "standby-session=%s" session_token))
   (assoc response :session session_token))
 
 (defn- oauth-login [db stytch-config front-end-base-url token]
@@ -40,9 +40,6 @@
           [{:keys [email]}] :emails
           [{:keys [profile-picture-url]}] :providers} :user}
         (stytch/authenticate-oauth stytch-config token)]
-    (println "first" first-name)
-    (println "email" email)
-    (println "pic" profile-picture-url  )
     (if session-token
       (do
         (users/create-user db email first-name last-name profile-picture-url)
