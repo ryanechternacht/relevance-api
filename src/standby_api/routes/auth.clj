@@ -1,7 +1,7 @@
 (ns standby-api.routes.auth
   (:require [compojure.core :as cpj]
-            [lambdaisland.uri :as uri]
             [standby-api.external-api.stytch :as stytch]
+            [standby-api.data.users :as users]
             [ring.util.http-response :as response]))
 
 (defn set-session [session_token response]
@@ -20,8 +20,7 @@
         (stytch/authenticate-oauth stytch-config token)]
     (if session-token
       (do
-        ;; TODO
-        ;; (d-users/update-user-from-stytch db email_address name (-> oauth_registrations first :profile_picture_url))
+        (users/update-user-from-stytch db email first-name last-name profile-picture-url)
         (set-session session-token (response/found front-end-base-url)))
       (response/found (str front-end-base-url "/login")))))
 
@@ -46,8 +45,7 @@
     (println "pic" profile-picture-url  )
     (if session-token
       (do
-        ;; TODO
-        ;; (d-users/update-user-from-stytch db email_address name (-> oauth_registrations first :profile_picture_url))
+        (users/create-user db email first-name last-name profile-picture-url)
         (set-session session-token (response/found front-end-base-url)))
       (response/found (str front-end-base-url "/login")))))
 
