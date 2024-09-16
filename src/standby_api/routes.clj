@@ -1,6 +1,7 @@
 (ns standby-api.routes
   (:require [compojure.core :as cpj]
-            [ring.util.http-response :as response]))
+            [ring.util.http-response :as response]
+            [standby-api.routes.auth :as auth]))
 
 (def GET-root-healthz
   (cpj/GET "/" []
@@ -28,6 +29,8 @@
 
 (cpj/defroutes routes
   GET-root-healthz
+  auth/GET-login
+  auth/GET-signup
   get-404
   post-404
   patch-404
