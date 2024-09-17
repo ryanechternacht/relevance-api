@@ -56,4 +56,8 @@
                token)
       (response/bad-request "Unknown stytch_token_type"))))
 
+(def GET-gmail-approval
+  (cpj/GET "/v0.1/gmail-approval" []
+    (println "hello")))
+
 ;; https://test.stytch.com/v1/public/oauth/google/start?public_token=public-token-test-149e4c38-50fd-4eb3-9b34-0c2992e73a07

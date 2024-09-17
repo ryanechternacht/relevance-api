@@ -2,6 +2,7 @@
   (:require [compojure.core :as cpj]
             [ring.util.http-response :as response]
             [standby-api.routes.auth :as auth]
+            [standby-api.routes.outreach :as outreach]
             [standby-api.routes.users :as users]))
 
 (def GET-root-healthz
@@ -30,9 +31,13 @@
 
 (cpj/defroutes routes
   GET-root-healthz
+  auth/GET-gmail-approval
   auth/GET-login
   auth/GET-signup
+  outreach/GET-outreach
+  outreach/POST-outreach
   users/GET-users-me
+  users/GET-users-shortcode
   get-404
   post-404
   patch-404

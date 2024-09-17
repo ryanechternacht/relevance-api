@@ -18,8 +18,20 @@
   (let [query (-> (base-user-query)
                   (h/where [:= :user_account.email email]))]
     (->> query
-         (db/->>execute db))))
-        ;;  first)))
+         (db/->>execute db)
+         first)))
+
+(defn get-by-shortcode [db shortcode]
+  (let [query (-> (base-user-query)
+                  (h/where [:= :user_account.public_link shortcode]))]
+    (->> query
+         (db/->>execute db)
+         first)))
+
+(comment
+  (get-by-shortcode db/local-db "5ytAfpg")
+  ;
+  )
 
 (defn update-user-from-stytch [db email first-name last-name image]
   (try 
