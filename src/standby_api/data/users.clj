@@ -60,3 +60,18 @@
     (->> query
          (db/->>execute db)
          first)))
+
+(defn update-user [db email fields]
+  (let [fields (select-keys fields [:first-name :last-name :image :mail-sync-status :public-link])
+        query (-> (h/update :user_account)
+                  (h/set fields)
+                  (h/where [:= :email email])
+                  (merge (apply h/returning (concat (keys fields) [:email]))))]
+    (->> query
+         (db/->>execute db)
+         first)))
+
+(comment
+  (update-user db/local-db "ryan@sharepage.io" {:mail-sync-status "setup-required"})
+  ;
+  )

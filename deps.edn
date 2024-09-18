@@ -32,6 +32,9 @@
   :job {:ns-default standby-api.server
         :exec-fn job
         :exec-args {:name ""}}
+  :sync-email {:ns-default standby-api.server
+               :exec-fn sync-email
+               :exec-args {}}
   :webserver {:ns-default standby-api.server
               :exec-fn webserver
               :exec-args {:port 3001
