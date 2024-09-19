@@ -1,4 +1,4 @@
-(ns standby-api.chatgpt
+(ns standby-api.external-api.chatgpt
   (:require [cheshire.core :as json]
             [clj-http.client :as http]))
 
@@ -8,7 +8,7 @@
 
 (defn is-this-a-sales-email?
   [email-body]
-  (let [body {:model "gpt-4o"
+  (let [body {:model "gpt-4o-mini"
               :messages [{:role "system"
                           :content sales-email-prompt}
                          {:role "user"

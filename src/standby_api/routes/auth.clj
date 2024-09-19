@@ -79,19 +79,17 @@
                                   "&code=" code
                                   "&grant_type=authorization_code"
                                   "&redirect_uri=" redirect-uri)
-                             {:accept :json
+                            {:accept :json
                               :as :json})
                   :body)
         {user-email :user_email} (gmail-sync/save-token db state token)]
-    (println "user_email" user-email)
     (users/update-user db user-email {:mail-sync-status "ready"})
     (response/see-other (str front-end-base-url "/app/settings"))))
 
 (def GET-gmail-approval
   (cpj/GET "/v0.1/gmail-approval" [code state :as {:keys [db config user]}]
-    (let [google-config {:client-id "683755934028-2o1cv958nfep1ok3gk34l29t2ngthbie.apps.googleusercontent.com"
-                         :redirect-uri "http://api.buyersphere-local.com/v0.1/gmail-approval"
-                         :client-secret "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"}]
+    (let [google-config (:google-api config)
+          front-end-base-url (-> config :front-end :base-url)]
       (if (not code)
         (prepare-email-auth google-config db (:email user))
-        (complete-auth-flow (-> config :front-end :base-url) google-config db code state)))))
+        (complete-auth-flow front-end-base-url google-config db code state)))))
