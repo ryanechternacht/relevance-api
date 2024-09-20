@@ -2,18 +2,13 @@
   (:require [migratus.core :as migratus]
             [standby-api.middleware.config :as config]))
   
-  ;; TODO how do I roll these out to AWS?
-  ;; Ideally I'd port into an AWS repl. In reality I'll probably just
-  ;; fire up a repl with config set to the right AWS environment?
   (def db (:pg-db config/config))
   
-  ;; TODO get rid of /migrations/schema folder
   (def migratus-config {:store                :database
                         :migration-dir        "migrations/"
                         :migration-table-name "migratus"
                         :db db})
   
-  ;; TODO I need a better way to run migrations
   ;; ;; dev
   ;; (def db {:dbtype "postgresql"
   ;;           :dbname "swaypage"

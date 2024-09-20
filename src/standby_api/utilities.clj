@@ -284,7 +284,6 @@
     ([]
      (.generate gen))
     ([timestamp]
-  ;;  TODO support more input types?
      (.construct gen (.getTime timestamp))))
 
   (comment

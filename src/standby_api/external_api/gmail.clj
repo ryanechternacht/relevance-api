@@ -1,10 +1,11 @@
 (ns standby-api.external-api.gmail
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
+            [cljstache.core :as stache]
             [clojure.string :as str])
   (:import java.util.Base64))
 
-;; (def access-token "ya29.a0AcM612xD_xGXYAJWFGh6r9UvCErtmqev2GCKAIxcf2-52cNLxLFe5Hvb9htNoiUReTNsdaoIMsaeqgySN99hCyDia7c0uX5gRZRZ_WLmHHd8gVkehW4fcl9mGDwRpu4jU3-QmZb4xzH5cwlrVRtSZvX7hfm-0Lg6N3nyQZNVaCgYKAX0SARESFQHGX2Mi68f2gU8z8qtew9s0IiTXzQ0175")
+(def email-body-template (slurp "resources/email-response.mustache"))
 
 (defn get-access-token [{:keys [client-id client-secret]} refresh-token]
   (-> (http/post (str "https://oauth2.googleapis.com/token"
@@ -40,6 +41,12 @@
       (#(.decode (Base64/getDecoder) %))
       String.))
 
+(defn- base64-url-encode [to-decode]
+  (-> to-decode
+      (#(.encodeToString (Base64/getEncoder) (.getBytes %)))
+      (str/replace #"\+" "-")
+      (str/replace #"\/" "_")))
+
 ;; I'm not convinced this is quite right, but it's probably mostly right
 (defn- get-domain-from-email [email]
   (-> email
@@ -47,15 +54,15 @@
       second
       (str/replace #">" "")))
 
-(defn is-sender-external? [user_email from-email]
-  (= (get-domain-from-email user_email) (get-domain-from-email from-email)))
+(defn is-sender-internal? [user-email from-email]
+  (= (get-domain-from-email user-email) (get-domain-from-email from-email)))
 
 (comment
   (get-domain-from-email "ryan@sharepage.io")
   (get-domain-from-email "Notion <notify@mail.notion.so>")
 
-  (is-sender-external? {:email "ryan@sharepage.io"} "tom@sharepage.io")
-  (is-sender-external? {:email "ryan@sharepage.io"} "tom@swaypage.io")
+  (is-sender-internal? "ryan@sharepage.io" "tom@sharepage.io")
+  (is-sender-internal? "ryan@sharepage.io" "tom@swaypage.io")
   ;
   )
 
@@ -149,3 +156,75 @@
   (gmail-api-post access-token
                   "users/me/labels"
                   {:name label-name}))
+
+(defn- get-info-to-thread
+  "pulls out the fields we need to make sure this email threads correctly"
+  [thread]
+  (let [first-message-headers (-> thread :messages first :payload :headers)]
+    {:message-id (->> first-message-headers
+                      (filter #(= (:name %) "Message-ID"))
+                      first
+                      :value)
+     :subject (->> first-message-headers
+                   (filter #(= (:name %) "Subject"))
+                   first
+                   :value)
+     :recipient (->> first-message-headers
+                     (filter #(= (:name %) "From"))
+                     first
+                     :value)}))
+
+;; Appropriately formatted email should look like this
+
+;; From: <ryan@sharepage.io>
+;; To: <ryan@echternacht.org>
+;; References: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
+;; In-Reply-To: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
+;; Subject: Re: How to use digital transformation
+
+;; I sent this from the API! hopefully it threads!
+
+(defn- make-email-text [front-end-base-url {:keys [email public-link first-name]} thread]
+  (let [{:keys [recipient message-id subject]} (get-info-to-thread thread)
+        body (stache/render email-body-template
+                            {:front-end-base-url front-end-base-url
+                             :public-link public-link
+                             :first-name first-name})]
+    (str "From: <" email ">\n"
+         "To: " recipient "\n"
+         "References: " message-id "\n"
+         "In-Reply-To: " message-id "\n"
+         "Subject: " subject "\n"
+         "\n"
+         body)))
+
+(defn send-relevance-response [front-end-base-url access-token thread user]
+  (println "thread" thread)
+  (let [email-text (make-email-text front-end-base-url user thread)]
+    (println "email text" email-text)
+    (gmail-api-post access-token
+                    "users/me/messages/send"
+                    {:raw (base64-url-encode email-text)
+                     :threadId (:id thread)})))
+
+(comment
+  #_{:clj-kondo/ignore [:unresolved-symbol]}
+  (try
+    (send-relevance-response "http://buyersphere-local.com"
+                             <access-token>
+                             {:id "19206daeae5912f8"
+                              :messages [{:payload
+                                          {:headers
+                                           [{:name "From",
+                                             :value "ryan echternacht <ryan@echternacht.org>"}
+                                            {:name "Message-ID",
+                                             :value "<CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>"}
+                                            {:name "Subject",
+                                             :value "How to use digital transformation"}]}}]}
+                             {:email "ryan@sharepage.io"
+                              :first-name "ryan"
+                              :public-link "asdf"})
+    (catch Exception ex
+      ex))
+  ;
+  )

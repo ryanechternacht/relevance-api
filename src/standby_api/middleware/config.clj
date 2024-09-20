@@ -2,7 +2,6 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]))
 
-  ;; TODO probaby use component or mount for this
 (def config
   (with-open [r (io/reader "resources/config.edn")]
     (edn/read (java.io.PushbackReader. r))))

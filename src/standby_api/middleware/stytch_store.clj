@@ -34,7 +34,6 @@
     [_ session-token]
     ;; Check if a valid cached version exists in the db. if not, validate with stytch and
     ;; update what we have in the db
-    ;; TODO Not sure how this should interact with write-session, but I bet it should
     (when session-token
       (if-let [cached-member (check-db-for-cached-session db session-token)]
         cached-member
@@ -46,7 +45,6 @@
     value)
   (delete-session
     [_ _]
-  ;;  TODO?
     nil))
 
 (defn stytch-store

@@ -47,8 +47,6 @@
 ;;       (println "authenticate-magic-link exception" e)
 ;;       nil)))
 
-;; TODO pull values out of this that are reasonable (besides just session_token)
-;; these should have the username, profile pic, etc
 (defn authenticate-oauth
   "Authenticates the oauth login attempt with stytch.
    Returns the session identifier or nil if the oauth login isn't valid."

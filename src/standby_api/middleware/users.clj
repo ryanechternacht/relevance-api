@@ -2,7 +2,6 @@
   (:require [standby-api.data.users :as users]
             [standby-api.utilities :as u]))
 
-;; ;; TODO do something more useful with the session info (like link it to whatever info we have saved)
 (defn- wrap-user-impl [handler {:keys [session db] :as request}]
   (if-let [email (-> session :emails first :email)]
     (let [user (u/kebab-case
