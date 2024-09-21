@@ -1,0 +1,11 @@
+FROM --platform=linux/amd64 clojure:openjdk-17-tools-deps
+
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+
+COPY . /usr/src/app
+# COPY ./deployment/dev/config.edn /usr/src/app/resources/config.edn
+
+RUN clj -P
+
+CMD ["sh", "-c", "sleep 1 && exec clj ${CLJ_CMD}"]
