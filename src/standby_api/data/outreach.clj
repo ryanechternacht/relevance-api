@@ -8,6 +8,7 @@
    :outreach.sender :outreach.snippet
    :outreach.body :outreach.company_type
    :outreach.linkedin_url :outreach.calendar_url
+   :outreach.company_name :outreach.company_logo_url
    :outreach.created_at])
 
 (defn- base-outreach-query []
