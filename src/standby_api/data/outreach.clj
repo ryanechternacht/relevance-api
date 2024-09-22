@@ -7,6 +7,7 @@
   [:outreach.uuid :outreach.recipient
    :outreach.sender :outreach.snippet
    :outreach.body :outreach.company_type
+   :outreach.linkedin_url :outreach.calendar_url
    :outreach.created_at])
 
 (defn- base-outreach-query []
@@ -25,10 +26,19 @@
   ;
   )
 
-(defn create-outreach [db {:keys [sender recipient snippet body company-type]}]
+(defn create-outreach [db
+                       {:keys [sender recipient snippet body
+                               company-type linkedin-url
+                               calendar-url company-name
+                               company-logo-url] :as outreach}]
+  (println "create" outreach)
   (let [query (-> (h/insert-into :outreach)
-                  (h/columns :uuid :recipient :sender :snippet :body :company_type)
-                  (h/values [[(u/uuid-v7) recipient sender snippet body company-type]])
+                  (h/columns :uuid :recipient :sender :snippet :body
+                             :company_type :linkedin_url :calendar_url 
+                             :company_name :company_logo_url)
+                  (h/values [[(u/uuid-v7) recipient sender snippet body
+                              company-type linkedin-url calendar-url
+                              company-name company-logo-url]])
                   (merge (apply h/returning outreach-columns)))]
     (->> query
          (db/->>execute db)
@@ -39,6 +49,8 @@
                                 :recipient "ryan@sharepage.io"
                                 :snippet "some cool outreach"
                                 :body "much more content about this outreach"
-                                :company-type "services"})
+                                :company-type "services"
+                                :linkedin-url "asdf"
+                                :calendar-url "ddd"})
   ;
   )
