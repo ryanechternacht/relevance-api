@@ -31,8 +31,7 @@
                        {:keys [sender recipient snippet body
                                company-type linkedin-url
                                calendar-url company-name
-                               company-logo-url] :as outreach}]
-  (println "create" outreach)
+                               company-logo-url]}]
   (let [query (-> (h/insert-into :outreach)
                   (h/columns :uuid :recipient :sender :snippet :body
                              :company_type :linkedin_url :calendar_url 
@@ -52,6 +51,8 @@
                                 :body "much more content about this outreach"
                                 :company-type "services"
                                 :linkedin-url "asdf"
-                                :calendar-url "ddd"})
+                                :calendar-url "ddd"
+                                :company-name "company"
+                                :company-logo-url "https://lh3.googleusercontent.com/a/ACg8ocI5zLIDRt1CiSH6jGV7a1K901iKcSzL9WqXYmdS1XaVn-jQHw=s96-c"})
   ;
   )
