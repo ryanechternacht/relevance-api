@@ -18,7 +18,6 @@
    user or nil if the session isn't valid"
   [{:keys [base-url project secret]}
    session-token]
-  (println "auth session" session-token)
   (try
     (-> (make-stytch-call (u/make-link base-url "sessions/authenticate")
                           project

@@ -31,4 +31,3 @@
   (migratus/rollback migratus-config)
     ;
   )
-  
