@@ -36,6 +36,8 @@
   auth/GET-signup
   outreach/GET-outreach
   outreach/POST-outreach
+  outreach/PATCH-outreach
+  outreach/POST-outreach-reply
   users/GET-users-me
   users/GET-users-shortcode
   get-404

@@ -184,7 +184,7 @@
 
 ;; I sent this from the API! hopefully it threads!
 
-(defn- make-email-text [front-end-base-url {:keys [email public-link first-name]} thread]
+(defn- make-relevance-auto-reponse-email [front-end-base-url {:keys [email public-link first-name]} thread]
   (let [{:keys [recipient message-id subject]} (get-info-to-thread thread)
         body (stache/render email-body-template
                             {:front-end-base-url front-end-base-url
@@ -199,9 +199,7 @@
          body)))
 
 (defn send-relevance-response [front-end-base-url access-token thread user]
-  (println "thread" thread)
-  (let [email-text (make-email-text front-end-base-url user thread)]
-    (println "email text" email-text)
+  (let [email-text (make-relevance-auto-reponse-email front-end-base-url user thread)]
     (gmail-api-post access-token
                     "users/me/messages/send"
                     {:raw (base64-url-encode email-text)
@@ -228,3 +226,35 @@
       ex))
   ;
   )
+
+
+;; Appropriately formatted email should look like this
+
+;; From: <ryan@sharepage.io>
+;; To: <ryan@echternacht.org>
+;; References: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
+;; In-Reply-To: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
+;; Subject: Re: How to use digital transformation
+
+;; I sent this from the API! hopefully it threads!
+
+(defn- wrap-in-blockquote [text]
+  (str "<blockquote class=\"gmail-blockquote\""
+       "style=\"margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;\">"
+       text
+       "</blockquote>"))
+
+(defn- make-reply-email [email {:keys [snippet sender body]}]
+  (let [draft-body (str "<br><br>" (wrap-in-blockquote body))]
+    (str "From: <" email ">\n"
+         "To: " sender "\n"
+         "Subject: RE: " snippet "\n"
+         "Content-Type: text/html\n"
+         "\n"
+         draft-body)))
+
+(defn create-outreach-reply-draft [access-token user outreach]
+  (let [email-text (make-reply-email (:email user) outreach)]
+    (gmail-api-post access-token
+                    "users/me/drafts"
+                    {:message {:raw (base64-url-encode email-text)}})))

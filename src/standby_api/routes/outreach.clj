@@ -23,3 +23,10 @@
     (if user
       (response/ok (outreach/update-outreach db uuid body))
       (response/unauthorized))))
+
+(def POST-outreach-reply
+  (cpj/POST "/v0.1/outreach/:uuid/reply" [uuid :as {:keys [db user config]}]
+    ;; TODO enforce this is the user's outreach
+    (if user
+      (response/ok (outreach/reply! (:google-api config) db user uuid))
+      (response/unauthorized))))
