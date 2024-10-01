@@ -1,6 +1,5 @@
 (ns standby-api.routes.users
-  (:require [compojure.coercions :as coerce]
-            [compojure.core :as cpj]
+  (:require [compojure.core :as cpj]
             [ring.util.http-response :as response]
             [standby-api.data.users :as users]))
 

@@ -232,8 +232,7 @@
 
 ;; From: <ryan@sharepage.io>
 ;; To: <ryan@echternacht.org>
-;; References: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
-;; In-Reply-To: <CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>
+;; Content-Type: text/html
 ;; Subject: Re: How to use digital transformation
 
 ;; I sent this from the API! hopefully it threads!
