@@ -9,21 +9,28 @@
    :outreach.body :outreach.company_type
    :outreach.linkedin_url :outreach.calendar_url
    :outreach.company_name :outreach.company_logo_url
-   :outreach.created_at])
+   :outreach.status :outreach.created_at])
 
 (defn- base-outreach-query []
   (-> (apply h/select outreach-columns)
       (h/from :outreach)
       (h/order-by [:outreach.uuid :desc])))
 
-(defn get-by-user [db email]
-  (let [query (-> (base-outreach-query)
-                  (h/where [:= :outreach.recipient email]))]
-    (->> query
-         (db/->>execute db))))
+(defn get-by-user
+  ([db email]
+   (get-by-user db email nil))
+  ([db email statuses]
+   (let [query (-> (base-outreach-query)
+                   (h/where [:= :outreach.recipient email])
+                   (cond-> statuses (h/where
+                                     [:in :outreach.status statuses])))]
+     (->> query
+          (db/->>execute db)))))
 
 (comment 
-  (get-by-user db/local-db "ryan@sharepage.io")
+  (get-by-user db/local-db "ryan@sharepage.io" nil)
+  (get-by-user db/local-db "ryan@sharepage.io" ["archive"])
+  (get-by-user db/local-db "ryan@sharepage.io" ["archive" "new"])
   ;
   )
 
@@ -54,5 +61,20 @@
                                 :calendar-url "ddd"
                                 :company-name "company"
                                 :company-logo-url "https://lh3.googleusercontent.com/a/ACg8ocI5zLIDRt1CiSH6jGV7a1K901iKcSzL9WqXYmdS1XaVn-jQHw=s96-c"})
+  ;
+  )
+
+(defn update-outreach [db uuid body]
+  (let [fields (select-keys body [:status])
+        query (-> (h/update :outreach)
+                  (h/set fields)
+                  (h/where [:= :outreach.uuid (java.util.UUID/fromString uuid)])
+                  (merge (apply h/returning (concat (keys fields) [:uuid]))))]
+    (->> query
+         (db/->>execute db)
+         first)))
+
+(comment
+  (update-outreach db/local-db "0191fdf7-ae27-7a30-80ed-527390b7fa5b" {:status "archive"})
   ;
   )
