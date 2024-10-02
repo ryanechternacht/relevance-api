@@ -9,7 +9,7 @@
            [org.postgresql.util PGobject]))
 
 (def local-db {:dbtype "postgresql"
-               :dbname "standby"
+               :dbname "relevance"
                :host "127.0.0.1"
                :user "ryanechternacht"
                :password nil

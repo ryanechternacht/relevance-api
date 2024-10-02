@@ -67,10 +67,10 @@
          first)))
 
 (comment
-  (create-outreach db/local-db {:sender "tom@swaypage.io"
+  (create-outreach db/local-db {:sender "ryan@echternacht.org"
                                 :recipient "ryan@sharepage.io"
-                                :snippet "some cool outreach"
-                                :body "much more content about this outreach"
+                                :snippet "Fitness for busy founders"
+                                :body "Hi Ryan<br>I wanted to know if you're finding time to stay fit while being a founder. If you need help with motivation, time management, or exercise planning, I'd love to help you. <br>Regards,<br>Tom"
                                 :company-type "services"
                                 :linkedin-url "asdf"
                                 :calendar-url "ddd"
@@ -96,17 +96,19 @@
 
 (defn reply!
   "Calling this method will create a draft email in the user's inbox!"
-  [gmail-config db user uuid]
+  [gmail-config db user uuid {:keys [message]}]
   (let [outreach (get-by-uuid db uuid)
         {{refresh-token :refresh_token} :token} (gmail-sync/get-for-user db (:email user))
         {access-token :access_token} (gmail/get-access-token gmail-config refresh-token)]
-    (gmail/create-outreach-reply-draft access-token user outreach)))
+    (gmail/create-outreach-reply-draft access-token user outreach message)
+    (update-outreach db uuid {:status "replied"})))
 
 (comment
   (reply! (:google-api config/config)
           db/local-db
           {:email "ryan@sharepage.io"
            :mail-sync-status "ready"}
-          "0191fdf7-ae27-7a30-80ed-527390b7fa5b")
+          "0191fdf7-ae27-7a30-80ed-527390b7fa5b"
+          {:message "hi there"})
   ;
   )

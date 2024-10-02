@@ -8,31 +8,44 @@
 (def email-body-template (slurp "resources/email-response.mustache"))
 
 (defn get-access-token [{:keys [client-id client-secret]} refresh-token]
-  (-> (http/post (str "https://oauth2.googleapis.com/token"
-                      "?client_id=" client-id
-                      "&client_secret=" client-secret
-                      "&grant_type=refresh_token"
-                      "&refresh_token=" refresh-token)
-                 {:as :json
-                  :accept :json})
-      :body))
+  (try
+    (-> (http/post (str "https://oauth2.googleapis.com/token"
+                        "?client_id=" client-id
+                        "&client_secret=" client-secret
+                        "&grant_type=refresh_token"
+                        "&refresh_token=" refresh-token)
+                   {:as :json
+                    :accept :json})
+        :body)
+    (catch Exception ex
+      (println "gmail-access-token exception")
+      (println ex)
+      (throw ex))))
 
 (defn gmail-api-get [access-token url]
-  (-> (http/get (str "https://www.googleapis.com/gmail/v1/" url)
-                {:as :json
-                 :accept :json
-                 :content-type :json
-                 :oauth-token access-token})
-      :body))
+  (try
+    (-> (http/get (str "https://www.googleapis.com/gmail/v1/" url)
+                  {:as :json
+                   :accept :json
+                   :content-type :json
+                   :oauth-token access-token})
+        :body)
+    (catch Exception ex
+      (println "gmail-api-get exception")
+      (println ex))))
 
 (defn gmail-api-post [access-token url body]
-  (-> (http/post (str "https://www.googleapis.com/gmail/v1/" url)
-                 {:as :json
-                  :accept :json
-                  :content-type :json
-                  :oauth-token access-token
-                  :body (json/generate-string body)})
-      :body))
+  (try
+    (-> (http/post (str "https://www.googleapis.com/gmail/v1/" url)
+                   {:as :json
+                    :accept :json
+                    :content-type :json
+                    :oauth-token access-token
+                    :body (json/generate-string body)})
+        :body)
+    (catch Exception ex
+      (println "gmail-api-post exception")
+      (println ex))))
 
 (defn- base64-url-decode [to-decode]
   (-> to-decode
@@ -243,8 +256,8 @@
        text
        "</blockquote>"))
 
-(defn- make-reply-email [email {:keys [snippet sender body]}]
-  (let [draft-body (str "<br><br>" (wrap-in-blockquote body))]
+(defn- make-reply-email [email {:keys [snippet sender body]} message]
+  (let [draft-body (str message "<br><br>" (wrap-in-blockquote body))]
     (str "From: <" email ">\n"
          "To: " sender "\n"
          "Subject: RE: " snippet "\n"
@@ -252,8 +265,8 @@
          "\n"
          draft-body)))
 
-(defn create-outreach-reply-draft [access-token user outreach]
-  (let [email-text (make-reply-email (:email user) outreach)]
+(defn create-outreach-reply-draft [access-token user outreach message]
+  (let [email-text (make-reply-email (:email user) outreach message)]
     (gmail-api-post access-token
-                    "users/me/drafts"
-                    {:message {:raw (base64-url-encode email-text)}})))
+                    "users/me/messages/send"
+                    {:raw (base64-url-encode email-text)})))

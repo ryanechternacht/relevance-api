@@ -58,14 +58,14 @@
                token)
       (response/bad-request "Unknown stytch_token_type"))))
 
-(defn- prepare-email-auth [{:keys [client-id redirect-uri]} db email]
+(defn- prepare-email-auth [{:keys [client-id redirect-uri scopes]} db email]
   (let [{oauth-state :oauth_state} (gmail-sync/setup-auth db email)]
     (response/see-other
      (str "https://accounts.google.com/o/oauth2/v2/auth"
           "?client_id=" client-id
           "&redirect_uri=" redirect-uri
           "&response_type=code"
-          "&scope=https://www.googleapis.com/auth/gmail.modify"
+          "&scope=" scopes
           "&include_granted_scopes=true"
           "&access_type=offline"
           "&login_hint=" email
