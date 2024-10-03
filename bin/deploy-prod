@@ -1,0 +1,26 @@
+#!/bin/sh
+
+DEFAULT='\033[0m'
+GREEN='\033[0;32m'
+CYAN='\033[1;36m'
+
+aws ecr get-login-password --profile sp | docker login --username AWS --password-stdin 471112549420.dkr.ecr.us-east-2.amazonaws.com
+echo "${GREEN}Step 1 Complete:${DEFAULT} Refreshing AWS token
+"
+
+docker build -f deployment/prod/Dockerfile-prod -t relevance-api .
+echo "${GREEN}Step 2 Complete:${DEFAULT} Building Docker image
+"
+
+docker tag relevance-api:latest 471112549420.dkr.ecr.us-east-2.amazonaws.com/relevance-api:latest
+echo "${GREEN}Step 3 Complete:${DEFAULT} Tagging Docker image
+"
+
+docker push 471112549420.dkr.ecr.us-east-2.amazonaws.com/relevance-api:latest
+echo "${GREEN}Step 4 Complete:${DEFAULT} Deploying Docker image
+
+Check AWS AppRunner (link below) to see the service deployment:
+
+${CYAN}https://us-east-2.console.aws.amazon.com/apprunner/home?region=us-east-2#/services/dashboard?service_arn=arn%3Aaws%3Aapprunner%3Aus-east-2%3A471112549420%3Aservice%2Frelevance-api-dev%2F29411df8b9b94e5f8f69f7164e58bc38&active_tab=logs${DEFAULT}
+
+"
