@@ -4,7 +4,9 @@
             [standby-api.utilities :as u]
             [standby-api.middleware.config :as config]
             [standby-api.external-api.gmail :as gmail]
-            [standby-api.data.gmail-sync :as gmail-sync]))
+            ;; [standby-api.data.gmail-sync :as gmail-sync]
+            [standby-api.data.users :as users]
+            ))
 
 (def outreach-columns
   [:outreach.uuid :outreach.recipient
@@ -67,8 +69,8 @@
          first)))
 
 (comment
-  (create-outreach db/local-db {:sender "ryan@echternacht.org"
-                                :recipient "ryan@sharepage.io"
+   (create-outreach db/local-db {:sender "ryan@echternacht.org"
+                                :recipient "ryan@relevance.to"
                                 :snippet "Fitness for busy founders"
                                 :body "Hi Ryan<br>I wanted to know if you're finding time to stay fit while being a founder. If you need help with motivation, time management, or exercise planning, I'd love to help you. <br>Regards,<br>Tom"
                                 :company-type "services"
@@ -98,7 +100,7 @@
   "Calling this method will create a draft email in the user's inbox!"
   [gmail-config db user uuid {:keys [message]}]
   (let [outreach (get-by-uuid db uuid)
-        {{refresh-token :refresh_token} :token} (gmail-sync/get-for-user db (:email user))
+        {:keys [refresh-token] :as t} (users/get-user-oauth-tokens! db (:email user))
         {access-token :access_token} (gmail/get-access-token gmail-config refresh-token)]
     (gmail/create-outreach-reply-draft access-token user outreach message)
     (update-outreach db uuid {:status "replied"})))

@@ -51,11 +51,11 @@
 (defn- get-public-link []
   (u/get-nano-id 7))
 
-(defn create-user [db email first-name last-name image]
+(defn create-user [db email first-name last-name image oauth-token]
   (let [public-link (get-public-link)
         query (-> (h/insert-into :user_account)
-                  (h/columns :email :first_name :last_name :image :public_link)
-                  (h/values [[email first-name last-name image public-link]])
+                  (h/columns :email :first_name :last_name :image :public_link :oauth_token)
+                  (h/values [[email first-name last-name image public-link (db/lift oauth-token)]])
                   (#(apply h/returning % user-columns)))]
     (->> query
          (db/->>execute db)
@@ -75,3 +75,15 @@
   (update-user db/local-db "ryan@sharepage.io" {:mail-sync-status "setup-required"})
   ;
   )
+
+(defn get-user-oauth-tokens! 
+  "These tokens are secure information that should be handled with care"
+  [db email]
+  (let [query (-> (h/select :oauth_token)
+                  (h/from :user_account)
+                  (h/where [:= :email email]))]
+    (->> query
+         (db/->>execute db)
+         first
+         :oauth_token
+         u/kebab-case)))

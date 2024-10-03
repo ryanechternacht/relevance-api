@@ -31,7 +31,7 @@
 
 (cpj/defroutes routes
   GET-root-healthz
-  auth/GET-gmail-approval
+  ;; auth/GET-gmail-approval
   auth/GET-login
   auth/GET-signup
   outreach/GET-outreach
