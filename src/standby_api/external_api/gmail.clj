@@ -221,7 +221,7 @@
 (comment
   #_{:clj-kondo/ignore [:unresolved-symbol]}
   (try
-    (send-relevance-response "http://buyersphere-local.com"
+    (send-relevance-response "http://app.buyersphere-local.com"
                              <access-token>
                              {:id "19206daeae5912f8"
                               :messages [{:payload
