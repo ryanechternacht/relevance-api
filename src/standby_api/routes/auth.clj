@@ -1,9 +1,9 @@
 (ns standby-api.routes.auth
-  (:require [clj-http.client :as http]
+  (:require ;; [clj-http.client :as http]
             [compojure.core :as cpj]
             [standby-api.external-api.stytch :as stytch]
             [standby-api.data.users :as users]
-            [standby-api.data.gmail-sync :as gmail-sync]
+            ;; [standby-api.data.gmail-sync :as gmail-sync]
             [ring.util.http-response :as response]))
 
 (defn set-session [session_token response]
@@ -41,7 +41,7 @@
          oauth-token :provider-values
          {{:keys [first-name last-name]} :name
           [{:keys [email]}] :emails
-          [{:keys [profile-picture-url]}] :providers} :user :as sr}
+          [{:keys [profile-picture-url]}] :providers} :user}
         (stytch/authenticate-oauth stytch-config token)]
     (if session-token
       (do

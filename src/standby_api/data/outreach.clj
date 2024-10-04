@@ -100,7 +100,7 @@
   "Calling this method will create a draft email in the user's inbox!"
   [gmail-config db user uuid {:keys [message]}]
   (let [outreach (get-by-uuid db uuid)
-        {:keys [refresh-token] :as t} (users/get-user-oauth-tokens! db (:email user))
+        {:keys [refresh-token]} (users/get-user-oauth-tokens! db (:email user))
         {access-token :access_token} (gmail/get-access-token gmail-config refresh-token)]
     (gmail/create-outreach-reply-draft access-token user outreach message)
     (update-outreach db uuid {:status "replied"})))
