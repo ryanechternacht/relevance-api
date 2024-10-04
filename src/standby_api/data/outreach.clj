@@ -14,6 +14,7 @@
    :outreach.body :outreach.company_type
    :outreach.linkedin_url :outreach.calendar_url
    :outreach.company_name :outreach.company_logo_url
+   :relevant-emoji :relevant-description
    :outreach.status :outreach.created_at])
 
 (defn- base-outreach-query []
