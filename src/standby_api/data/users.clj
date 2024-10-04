@@ -7,7 +7,8 @@
 (def user-columns
   [:user_account.email :user_account.mail_sync_status
    :user_account.first_name :user_account.last_name
-   :user_account.image :user_account.public_link])
+   :user_account.image :user_account.public_link
+   :user_account.relevancies])
 
 (defn- base-user-query []
   (-> (apply h/select user-columns)
@@ -34,7 +35,7 @@
   )
 
 (defn update-user-from-stytch [db email first-name last-name image]
-  (try 
+  (try
     (let [updates (cond-> {}
                     (not (str/blank? first-name)) (update :first_name first-name)
                     (not (str/blank? last-name)) (update :last_name last-name)
@@ -62,7 +63,13 @@
          first)))
 
 (defn update-user [db email fields]
-  (let [fields (select-keys fields [:first-name :last-name :image :mail-sync-status :public-link])
+  (let [fields (-> fields (select-keys [:first-name
+                                        :last-name
+                                        :image
+                                        :mail-sync-status
+                                        :public-link
+                                        :relevancies])
+                   (u/update-if-not-nil :relevancies db/lift))
         query (-> (h/update :user_account)
                   (h/set fields)
                   (h/where [:= :email email])
@@ -76,7 +83,7 @@
   ;
   )
 
-(defn get-user-oauth-tokens! 
+(defn get-user-oauth-tokens!
   "These tokens are secure information that should be handled with care"
   [db email]
   (let [query (-> (h/select :oauth_token)

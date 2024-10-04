@@ -40,6 +40,7 @@
   outreach/POST-outreach-reply
   users/GET-users-me
   users/GET-users-shortcode
+  users/PATCH-users-me
   get-404
   post-404
   patch-404

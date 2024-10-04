@@ -53,16 +53,18 @@
 
 (defn create-outreach [db
                        {:keys [sender recipient snippet body
-                               company-type linkedin-url
-                               calendar-url company-name
-                               company-logo-url]}]
+                               linkedin-url calendar-url
+                               company-logo-url company-name
+                               relevant-emoji relevant-description] :as obj}]
   (let [query (-> (h/insert-into :outreach)
                   (h/columns :uuid :recipient :sender :snippet :body
-                             :company_type :linkedin_url :calendar_url
-                             :company_name :company_logo_url)
+                             :linkedin_url :calendar_url
+                             :company_name :company_logo_url
+                             :relevant_emoji :relevant_description)
                   (h/values [[(u/uuid-v7) recipient sender snippet body
-                              company-type linkedin-url calendar-url
-                              company-name company-logo-url]])
+                              linkedin-url calendar-url
+                              company-name company-logo-url
+                              relevant-emoji relevant-description]])
                   (merge (apply h/returning outreach-columns)))]
     (->> query
          (db/->>execute db)

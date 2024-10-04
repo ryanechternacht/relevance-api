@@ -1,7 +1,7 @@
 (ns standby-api.external-api.gmail
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
-            [cljstache.core :as stache]
+            ;; [cljstache.core :as stache]
             [clojure.string :as str])
   (:import java.util.Base64))
 
@@ -47,12 +47,12 @@
       (println "gmail-api-post exception")
       (println ex))))
 
-(defn- base64-url-decode [to-decode]
-  (-> to-decode
-      (str/replace #"-" "+")
-      (str/replace #"_" "/")
-      (#(.decode (Base64/getDecoder) %))
-      String.))
+;; (defn- base64-url-decode [to-decode]
+;;   (-> to-decode
+;;       (str/replace #"-" "+")
+;;       (str/replace #"_" "/")
+;;       (#(.decode (Base64/getDecoder) %))
+;;       String.))
 
 (defn- base64-url-encode [to-decode]
   (-> to-decode
