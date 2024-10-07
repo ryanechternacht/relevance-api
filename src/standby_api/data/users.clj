@@ -52,7 +52,7 @@
 
 ;; TODO base these off of name
 (defn- get-public-link [first-name last-name]
-  (str first-name "-" last-name "-" (u/get-nano-id-lowercase 4)))
+  (str first-name "-" last-name "-" (u/get-nano-id-lowercase 6)))
 
 (defn create-user [db email first-name last-name image oauth-token]
   (let [public-link (get-public-link first-name last-name)
