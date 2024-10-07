@@ -24,13 +24,15 @@
 
 (defn get-by-shortcode [db shortcode]
   (let [query (-> (base-user-query)
-                  (h/where [:= :user_account.public_link shortcode]))]
+                  (h/where [:=
+                            [:lower :user_account.public_link]
+                            [:lower shortcode]]))]
     (->> query
          (db/->>execute db)
          first)))
 
 (comment
-  (get-by-shortcode db/local-db "5ytAfpg")
+  (get-by-shortcode db/local-db "QYP2n1i")
   ;
   )
 
@@ -49,11 +51,11 @@
       nil)))
 
 ;; TODO base these off of name
-(defn- get-public-link []
-  (u/get-nano-id 7))
+(defn- get-public-link [first-name last-name]
+  (str first-name "-" last-name "-" (u/get-nano-id-lowercase 7)))
 
 (defn create-user [db email first-name last-name image oauth-token]
-  (let [public-link (get-public-link)
+  (let [public-link (get-public-link first-name last-name)
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image :public_link :oauth_token)
                   (h/values [[email first-name last-name image public-link (db/lift oauth-token)]])
@@ -94,3 +96,40 @@
          first
          :oauth_token
          u/kebab-case)))
+
+(defn check-public-link 
+  "returns nil if the link is fine. a string describing the error otherwise"
+  [link]
+  (cond 
+    (< (count link) 6) "Public links must be at least 6 characters"
+    (> (count link) 40) "Public links must be fewer than 40 characters"
+    (not (re-find #"^[a-zA-Z0-9\-]+$" link)) "Public links can only contain letters, numbers, and dashes (-)"))
+
+(comment
+  (check-public-link (str/join (repeat 50 "a")))
+  (check-public-link "abc")
+  (check-public-link "sadfdf_")
+  (check-public-link "abc1234")
+  ;
+  )
+
+(defn update-user-public-link
+  "returns false if another user has this link, truthy otherwise"
+  [db email link]
+  (let [check-query (-> (h/select 1)
+                        (h/from :user_account)
+                        (h/where [:and
+                                  [:= :public_link link]
+                                  [:not= :email email]]))
+        check-result (->> check-query
+                          (db/->>execute db)
+                          seq)]
+    (if check-result
+      false
+      (update-user db email {:public-link link}))))
+
+(comment
+  (update-user-public-link db/local-db "ryan@sharepage.io" "asdf")
+  (update-user-public-link db/local-db "tom@sharepage.io" "asdf")
+  ;
+  )

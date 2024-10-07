@@ -18,3 +18,16 @@
     (if user
       (response/ok (users/update-user db (:email user) body))
       (response/unauthorized))))
+
+(def PATCH-users-me-public-link
+  (cpj/PATCH "/v0.1/users/me/public-link" {:keys [db user body]}
+    (if user
+      (let [link (:public-link body)]
+        (if-let [error (users/check-public-link link)]
+          (response/bad-request {:error error})
+          (if-let [result (users/update-user-public-link db
+                                                         (:email user)
+                                                         link)]
+            (response/ok result)
+            (response/bad-request {:error "public link in user by another user"}))))
+      (response/unauthorized))))

@@ -41,6 +41,7 @@
   users/GET-users-me
   users/GET-users-shortcode
   users/PATCH-users-me
+  users/PATCH-users-me-public-link
   get-404
   post-404
   patch-404
