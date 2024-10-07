@@ -9,7 +9,7 @@
                       :migration-table-name "migratus"
                       :db db})
 
-  ;; ;; dev
+;; ;; dev
 ;; (def db {:dbtype "postgresql"
 ;;          :dbname "relevance"
 ;;          :host "swaypage-dev.c7o2qu0iacgk.us-east-2.rds.amazonaws.com"
@@ -17,13 +17,13 @@
 ;;          :password "Z4L25#FDM#pe"
 ;;          :ssl false})
 
-  ;; prod
-  ;; (def db {:dbtype "postgresql"
-  ;;          :dbname "relevance"
-  ;;          :host "sharepage.c7o2qu0iacgk.us-east-2.rds.amazonaws.com"
-  ;;          :user "postgres"
-  ;;          :password "MUMlmURVCC9Wed9Lv79Pqi5a"
-  ;;          :ssl false})
+;; prod
+;; (def db {:dbtype "postgresql"
+;;          :dbname "relevance"
+;;          :host "sharepage.c7o2qu0iacgk.us-east-2.rds.amazonaws.com"
+;;          :user "postgres"
+;;          :password "MUMlmURVCC9Wed9Lv79Pqi5a"
+;;          :ssl false})
 
 (comment
   (migratus/create migratus-config "example")
