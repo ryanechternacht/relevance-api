@@ -6,7 +6,7 @@ $$Hey,
 
 Thanks for reaching out! Can you tell me more about how this matches what I'm working on?
 
-Here's the link to share more info: {{ profileLink }}.
+Here's the link to share more info: {{{ profileLink }}}.
 
 Thanks!$$
 where public_link_message is null;

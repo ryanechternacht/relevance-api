@@ -4,6 +4,8 @@
             [standby-api.db :as db]
             [standby-api.utilities :as u]))
 
+(def default-profile-message-template (slurp "resources/default-profile-message.mustache"))
+
 (def user-columns
   [:user_account.email :user_account.mail_sync_status
    :user_account.first_name :user_account.last_name
@@ -58,8 +60,12 @@
 (defn create-user [db email first-name last-name image oauth-token]
   (let [public-link (get-public-link first-name last-name)
         query (-> (h/insert-into :user_account)
-                  (h/columns :email :first_name :last_name :image :public_link :oauth_token)
-                  (h/values [[email first-name last-name image public-link (db/lift oauth-token)]])
+                  (h/columns :email :first_name :last_name :image 
+                             :public_link :public_link_message 
+                             :oauth_token)
+                  (h/values [[email first-name last-name image 
+                              public-link default-profile-message-template 
+                              (db/lift oauth-token)]])
                   (#(apply h/returning % user-columns)))]
     (->> query
          (db/->>execute db)
