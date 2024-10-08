@@ -56,7 +56,7 @@
                        {:keys [sender recipient snippet body
                                linkedin-url calendar-url
                                company-logo-url company-name
-                               relevant-emoji relevant-description] :as obj}]
+                               relevant-emoji relevant-description]}]
   (let [query (-> (h/insert-into :outreach)
                   (h/columns :uuid :recipient :sender :snippet :body
                              :linkedin_url :calendar_url

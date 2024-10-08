@@ -8,7 +8,7 @@
   [:user_account.email :user_account.mail_sync_status
    :user_account.first_name :user_account.last_name
    :user_account.image :user_account.public_link
-   :user_account.relevancies])
+   :user_account.relevancies :user_account.onboarding_step])
 
 (defn- base-user-query []
   (-> (apply h/select user-columns)
@@ -70,7 +70,8 @@
                                         :image
                                         :mail-sync-status
                                         :public-link
-                                        :relevancies])
+                                        :relevancies
+                                        :onboarding-step])
                    (u/update-if-not-nil :relevancies db/lift))
         query (-> (h/update :user_account)
                   (h/set fields)
