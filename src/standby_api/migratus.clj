@@ -29,5 +29,5 @@
   (migratus/create migratus-config "example")
   (migratus/migrate migratus-config)
   (migratus/rollback migratus-config)
-    ;
+  ;
   )
