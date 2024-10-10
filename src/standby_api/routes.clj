@@ -35,9 +35,10 @@
   auth/GET-login
   auth/GET-signup
   outreach/GET-outreach
-  outreach/POST-outreach
   outreach/PATCH-outreach
   outreach/POST-outreach-reply
+  outreach/POST-outreach
+  outreach/GET-outreach-uuid
   users/GET-users-me
   users/GET-users-shortcode
   users/PATCH-users-me
