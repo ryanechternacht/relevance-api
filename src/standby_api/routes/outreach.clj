@@ -4,14 +4,10 @@
             [ring.util.http-response :as response]))
 
 (def GET-outreach
-  (cpj/GET "/v0.1/outreach" [statuses :as {:keys [db user]}]
-    (let [statuses-as-vec (cond
-                            (not statuses) nil
-                            (vector? statuses) statuses
-                            :else [statuses])]
-      (if user
-        (response/ok (outreach/get-by-user db (:email user) statuses-as-vec))
-        (response/unauthorized)))))
+  (cpj/GET "/v0.1/outreach" [status :as {:keys [db user]}]
+    (if user
+      (response/ok (outreach/get-by-user db (:email user) status))
+      (response/unauthorized))))
 
 (def PATCH-outreach
   (cpj/PATCH "/v0.1/outreach/:uuid" [uuid :as {:keys [db body user]}]

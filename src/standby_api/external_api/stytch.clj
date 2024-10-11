@@ -30,6 +30,16 @@
       (println "authenticate-session exception" _)
       nil)))
 
+(defn revoke-session [{:keys [base-url project secret]} session-token]
+  (try
+    (-> (make-stytch-call (u/make-link base-url "sessions/revoke")
+                          project
+                          secret
+                          {:session_token session-token}))
+    (catch Exception _
+      (println "revoke-session exception" _)
+      nil)))
+
 ;; (defn authenticate-magic-link
 ;;   "Authenticates the magic link login attempt with stytch.
 ;;    Returns the session identifier or nil if the magic link login isn't valid."
