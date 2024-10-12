@@ -21,12 +21,17 @@
       (h/do-update-set :stytch_member_json :valid_until)
       (db/->execute db)))
 
+(defn- remove-session [db session-token]
+  (let [query (-> (h/delete-from :session_cache)
+                  (h/where [:= :stytch_session_id session-token]))]
+    (->> query
+         (db/->>execute db))))
+
 (comment
   (cache-stytch-login db/local-db "abc123" {:a 1 :b 2 :c 3})
   (check-db-for-cached-session db/local-db "abc123")
   ;
   )
-
 
 (deftype StytchStore [stytch-config db]
   rs/SessionStore
@@ -44,7 +49,9 @@
     [_ _ value]
     value)
   (delete-session
-    [_ _]
+    [_ session-token]
+    (stytch/revoke-session stytch-config session-token)
+    (remove-session db session-token)
     nil))
 
 (defn stytch-store

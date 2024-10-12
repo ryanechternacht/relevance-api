@@ -141,3 +141,8 @@
   (update-user-public-link db/local-db "tom@sharepage.io" "asdf")
   ;
   )
+
+(defn logout!
+  "This will delete the session out of the session. The user will
+   be required to login again to access the site"
+  [db {:keys [relevance-session]}])

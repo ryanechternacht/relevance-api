@@ -31,3 +31,11 @@
             (response/ok result)
             (response/bad-request {:error "public link in user by another user"}))))
       (response/unauthorized))))
+
+;; This isn't correctly clearly frontend cookies, but w/e
+;; the real issue is that creates "failures" on our backend
+(def GET-users-me-logout
+  (cpj/GET "/v0.1/users/me/logout" {:keys [user]}
+    (if user
+      (assoc (response/found "https://www.relevance.to") :session nil)
+      (response/unauthorized))))
