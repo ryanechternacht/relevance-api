@@ -39,8 +39,9 @@
   ;
   )
 
-(defn update-user-from-stytch 
-  [db email {:keys [first-name last-name image has-send-scope refresh-token]}]
+(defn update-user-from-stytch [db email {:keys [first-name last-name image
+                                                has-send-scope refresh-token
+                                                provider-values]}]
   (try
     (let [updates (cond-> {}
                     (not (str/blank? first-name)) (assoc :first_name first-name)
@@ -48,13 +49,13 @@
                     (not (str/blank? image)) (assoc :image image)
                     refresh-token (assoc :refresh_token refresh-token)
                     ;; only update has send scope if it's a new refresh token
-                    refresh-token (assoc :has_send_scope has-send-scope))
+                    refresh-token (assoc :has_send_scope has-send-scope)
+                    provider-values (assoc :provider_values (db/lift provider-values)))
           query (-> (h/update :user_account)
                     (h/set updates)
                     (h/where [:= :email email]))]
       (db/execute db query))
     (catch Exception _
-      (println "exception" _)
       ;; if we fail, whatever just keep going
       nil)))
 
@@ -62,15 +63,17 @@
 (defn- get-public-link [first-name last-name]
   (str first-name "-" last-name "-" (u/get-nano-id-lowercase 6)))
 
-(defn create-user [db email first-name last-name image oauth-token]
+(defn create-user [db email {:keys [first-name last-name image provider-values
+                                    has-send-scope refresh-token]}]
   (let [public-link (get-public-link first-name last-name)
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image 
                              :public_link :public_link_message 
-                             :oauth_token)
-                  (h/values [[email first-name last-name image 
-                              public-link default-profile-message-template 
-                              (db/lift oauth-token)]])
+                             :oauth_token has-send-scope refresh-token)
+                  (h/values [[email first-name last-name image
+                              public-link default-profile-message-template
+                              (db/lift provider-values) has-send-scope
+                              refresh-token]])
                   (#(apply h/returning % user-columns)))]
     (->> query
          (db/->>execute db)

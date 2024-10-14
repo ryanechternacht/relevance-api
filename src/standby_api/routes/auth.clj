@@ -69,15 +69,11 @@
       (response/bad-request "Unknown stytch_token_type"))))
 
 (defn- oauth-signup [db stytch-config front-end-base-url token]
-  (let [{session-token :session-token
-         oauth-token :provider-values
-         {{:keys [first-name last-name]} :name
-          [{:keys [email]}] :emails
-          [{:keys [profile-picture-url]}] :providers} :user}
-        (stytch/authenticate-oauth stytch-config token)]
+  (let [stytch-response (stytch/authenticate-oauth stytch-config token)
+        {:keys [session-token email] :as stytch-values} (process-stytch-token stytch-response)]
     (if session-token
       (do
-        (users/create-user db email first-name last-name profile-picture-url oauth-token)
+        (users/create-user db email stytch-values)
         (set-session session-token (response/found front-end-base-url)))
       (response/found (str front-end-base-url "/login")))))
 
