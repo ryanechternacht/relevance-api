@@ -265,7 +265,9 @@
          "\n"
          draft-body)))
 
-(defn create-outreach-reply-draft [access-token user outreach message]
+(defn send-outreach-reply! 
+  "this function will send an email on behalf of a user. use with care"
+  [access-token user outreach message]
   (let [email-text (make-reply-email (:email user) outreach message)]
     (gmail-api-post access-token
                     "users/me/messages/send"
