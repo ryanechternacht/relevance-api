@@ -1,0 +1,32 @@
+<div style="margin: 20px; padding: 0; text-align: left; font-family: Helvetica, sans-serif;">
+  
+  <h1 style="margin: 0px">Your Weekly Digest from Relevance</h1>
+  {{#replied-count}}
+    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
+      You replied to {{ replied-count }}
+      {{#replied-count-plura}}messages{{/replied-count-plura}}{{^replied-count-plura}}message{{/replied-count-plura}}
+      this week. Keep it up!
+    </p>
+  {{/replied-count}}
+  {{#last-week-count}}
+    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
+      {{ last-week-count }} 
+      {{#last-week-plural}}people{{/last-week-plural}}{{^last-week-plural}}person{{/last-week-plural}}
+      reached out to you this week.
+    </p>
+  {{/last-week-count}}
+  {{#unread-count}}
+    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
+      You have {{ unread-count }} 
+      {{#unread-count-plura}}messages{{/unread-count-plura}}{{^unread-count-plura}}message{{/unread-count-plura}}
+      awaiting your response. Here are a few we think you may find relevant:
+    </p>
+
+    <ul>
+      {{#samples}}
+        <li><a href="{{frontend-url}}app/{{uuid}}">{{snippet-short}}</a></li>      
+      {{/samples}}
+    </ul>
+  {{/unread-count}}
+
+</div>

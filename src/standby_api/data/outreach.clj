@@ -38,19 +38,35 @@
 (defn get-by-user
   ([db email]
    (get-by-user db email nil))
-  ([db email status]
-   (let [query (-> (base-outreach-query)
-                   (h/where [:= :outreach.recipient email])
-                   (cond-> status (h/where (status-conditional-map status))))]
-     (->> query
-          (db/->>execute db)))))
+  ([db email filters]
+   (get-by-user db email filters {}))
+  ([db email {:keys [status after]} {:keys [count? limit]}]
+   (let [query (cond-> (base-outreach-query)
+                 count? (-> (dissoc :select)
+                            (h/select :%count.*)
+                            (dissoc :order-by))
+                 true (h/where [:= :outreach.recipient email])
+                 status (h/where (status-conditional-map status))
+                 after (h/where [:>= :created_at (u/read-date-string after)])
+                 limit (h/limit limit))]
+     (if count?
+       (-> query
+           (db/->execute db)
+           first
+           :count)
+       (->> query
+            (db/->>execute db))))))
 
 (comment
-  (get-by-user db/local-db "ryan@sharepage.io")
-  (get-by-user db/local-db "ryan@sharepage.io" "ignored")
-  (get-by-user db/local-db "ryan@sharepage.io" "new")
-  (get-by-user db/local-db "ryan@sharepage.io" "saved")
-  (get-by-user db/local-db "ryan@sharepage.io" "replied")
+  (get-by-user db/local-db "ryan@relevance.to")
+  (get-by-user db/local-db "ryan@relevance.to" {:status "ignored"})
+  (get-by-user db/local-db "ryan@relevance.to" {:status "new"})
+  (get-by-user db/local-db "ryan@relevance.to" {:status "saved"})
+  (get-by-user db/local-db "ryan@relevance.to" {:status "replied"})
+  (get-by-user db/local-db "ryan@relevance.to" {:after "2024-10-11"})
+  (get-by-user db/local-db "ryan@relevance.to" {:after "2024-10-11"} {:count? true})
+  (get-by-user db/local-db "ryan@relevance.to" {:status "replied"} {:count? true})
+  (get-by-user db/local-db "ryan@relevance.to" {:status "replied"} {:limit 2})
   ;
   )
 
