@@ -1,32 +1,31 @@
 <div style="margin: 20px; padding: 0; text-align: left; font-family: Helvetica, sans-serif;">
   
-  <h1 style="margin: 0px">Your Weekly Digest from Relevance</h1>
+  <h1 style="margin: 0px">Who has relevance to you this week:</h1>
+  {{#has-samples}}
+    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
+      ✨ {{sample-count}} relevant 
+      {{#sample-count-plural}}messages{{/sample-count-plural}}{{^sample-count-plural}}message{{/unread-count-plural}}:
+    </p>
+
+    <ol>
+      {{#samples}}
+        <li>{{emoji}} <a href="{{frontend-url}}app/{{uuid}}">{{snippet-short}}</a></li>      
+      {{/samples}}
+    </ol>
+  {{/has-samples}}
+
+  {{#should-render-unread-other}}
+    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
+      📥 You've got {{other-unread-count}} other
+      {{#last-week-plural}}messages{{/last-week-plural}}{{^last-week-plural}}message{{/last-week-plural}}
+    </p>
+  {{/should-render-unread-other}}
+
   {{#replied-count}}
     <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
-      You replied to {{ replied-count }}
-      {{#replied-count-plura}}messages{{/replied-count-plura}}{{^replied-count-plura}}message{{/replied-count-plura}}
+      👍 You replied to {{ replied-count }}
+      {{#replied-count-plural}}messages{{/replied-count-plural}}{{^replied-count-plural}}message{{/replied-count-plural}}
       this week. Keep it up!
     </p>
   {{/replied-count}}
-  {{#last-week-count}}
-    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
-      {{ last-week-count }} 
-      {{#last-week-plural}}people{{/last-week-plural}}{{^last-week-plural}}person{{/last-week-plural}}
-      reached out to you this week.
-    </p>
-  {{/last-week-count}}
-  {{#unread-count}}
-    <p style="font-size: 18px; margin-bottom: 24px; margin-top: 24px">
-      You have {{ unread-count }} 
-      {{#unread-count-plura}}messages{{/unread-count-plura}}{{^unread-count-plura}}message{{/unread-count-plura}}
-      awaiting your response. Here are a few we think you may find relevant:
-    </p>
-
-    <ul>
-      {{#samples}}
-        <li><a href="{{frontend-url}}app/{{uuid}}">{{snippet-short}}</a></li>      
-      {{/samples}}
-    </ul>
-  {{/unread-count}}
-
 </div>

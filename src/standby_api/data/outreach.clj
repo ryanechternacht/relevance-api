@@ -40,7 +40,7 @@
    (get-by-user db email nil))
   ([db email filters]
    (get-by-user db email filters {}))
-  ([db email {:keys [status after]} {:keys [count? limit]}]
+  ([db email {:keys [status after has-emoji?]} {:keys [count? limit]}]
    (let [query (cond-> (base-outreach-query)
                  count? (-> (dissoc :select)
                             (h/select :%count.*)
@@ -48,6 +48,7 @@
                  true (h/where [:= :outreach.recipient email])
                  status (h/where (status-conditional-map status))
                  after (h/where [:>= :created_at (u/read-date-string after)])
+                 has-emoji? (h/where [:!= :relevant-emoji nil])
                  limit (h/limit limit))]
      (if count?
        (-> query
@@ -67,6 +68,7 @@
   (get-by-user db/local-db "ryan@relevance.to" {:after "2024-10-11"} {:count? true})
   (get-by-user db/local-db "ryan@relevance.to" {:status "replied"} {:count? true})
   (get-by-user db/local-db "ryan@relevance.to" {:status "replied"} {:limit 2})
+  (get-by-user db/local-db "ryan@relevance.to" {:has-emoji? true})
   ;
   )
 
