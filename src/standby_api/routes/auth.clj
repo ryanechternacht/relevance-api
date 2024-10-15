@@ -14,20 +14,52 @@
   ;; (println "for postman:" (format "relevance-session%s" session_token))
   (assoc response :session session_token))
 
+(def ^:private gmail-send-scope "https://www.googleapis.com/auth/gmail.send")
+
+(defn- process-stytch-token
+  "processes a stytch session token to return the set of values we care about.
+   specifically a returns 
+   
+   {:first-name 
+   :last-name 
+   :email 
+   :profile-picture-url
+   :session-token
+   :has-send-scope
+   :refresh-token
+   :provider-values}
+   
+   Provider values is the raw google response"
+  [{session-token :session-token
+    {{:keys [first-name last-name]} :name
+     [{:keys [email]}] :emails
+     [{:keys [profile-picture-url]}] :providers} :user
+    {:keys [refresh-token scopes] :as provider-values} :provider-values}]
+  (let [has-send-scope (->> scopes
+                            (filter #(= % gmail-send-scope))
+                            first
+                            boolean)]
+    {:first-name first-name
+     :last-name last-name
+     :email email
+     :profile-picture-url profile-picture-url
+     :session-token session-token
+     :has-send-scope has-send-scope
+     :refresh-token refresh-token
+     :provider-values provider-values}))
+
 (defn- oauth-login [db stytch-config front-end-base-url token]
-  (let [{session-token :session-token
-         {{:keys [first-name last-name]} :name
-          [{:keys [email]}] :emails
-          [{:keys [profile-picture-url]}] :providers} :user}
-        (stytch/authenticate-oauth stytch-config token)]
+  (let [stytch-response (stytch/authenticate-oauth stytch-config token)
+        {:keys [session-token email] :as stytch-values} (process-stytch-token stytch-response)]
     (if session-token
       (do
-        (users/update-user-from-stytch db email first-name last-name profile-picture-url)
+        (users/update-user-from-stytch db email stytch-values)
         (set-session session-token (response/found front-end-base-url)))
       (response/found (str front-end-base-url "/login")))))
 
 (def GET-login
-  (cpj/GET "/v0.1/login" [stytch-token-type token :as {:keys [db config]}]
+  (cpj/GET "/v0.1/login" [stytch-token-type token :as {:keys [db config] :as req}]
+    (println "login" req)
     (condp = stytch-token-type
       "oauth" (oauth-login
                db
@@ -37,20 +69,17 @@
       (response/bad-request "Unknown stytch_token_type"))))
 
 (defn- oauth-signup [db stytch-config front-end-base-url token]
-  (let [{session-token :session-token
-         oauth-token :provider-values
-         {{:keys [first-name last-name]} :name
-          [{:keys [email]}] :emails
-          [{:keys [profile-picture-url]}] :providers} :user}
-        (stytch/authenticate-oauth stytch-config token)]
+  (let [stytch-response (stytch/authenticate-oauth stytch-config token)
+        {:keys [session-token email] :as stytch-values} (process-stytch-token stytch-response)]
     (if session-token
       (do
-        (users/create-user db email first-name last-name profile-picture-url oauth-token)
+        (users/create-user db email stytch-values)
         (set-session session-token (response/found front-end-base-url)))
       (response/found (str front-end-base-url "/login")))))
 
 (def GET-signup
-  (cpj/GET "/v0.1/signup" [stytch-token-type token :as {:keys [db config]}]
+  (cpj/GET "/v0.1/signup" [stytch-token-type token :as {:keys [db config] :as req}]
+    (println "signup" req)
     (condp = stytch-token-type
       "oauth" (oauth-signup
                db

@@ -11,7 +11,7 @@
    :user_account.first_name :user_account.last_name
    :user_account.image :user_account.public_link
    :user_account.public_link_message :user_account.relevancies 
-   :user_account.onboarding_step])
+   :user_account.onboarding_step :user_account.has-send-scope])
 
 (defn- base-user-query []
   (-> (apply h/select user-columns)
@@ -39,16 +39,22 @@
   ;
   )
 
-(defn update-user-from-stytch [db email first-name last-name image]
+(defn update-user-from-stytch [db email {:keys [first-name last-name image
+                                                has-send-scope refresh-token
+                                                provider-values]}]
   (try
     (let [updates (cond-> {}
-                    (not (str/blank? first-name)) (update :first_name first-name)
-                    (not (str/blank? last-name)) (update :last_name last-name)
-                    (not (str/blank? image)) (update :image image))]
-      (-> (h/update :user_account)
-          (h/set updates)
-          (h/where [:= :email email])
-          (db/->execute db)))
+                    (not (str/blank? first-name)) (assoc :first_name first-name)
+                    (not (str/blank? last-name)) (assoc :last_name last-name)
+                    (not (str/blank? image)) (assoc :image image)
+                    refresh-token (assoc :refresh_token refresh-token)
+                    ;; only update has send scope if it's a new refresh token
+                    refresh-token (assoc :has_send_scope has-send-scope)
+                    provider-values (assoc :provider_values (db/lift provider-values)))
+          query (-> (h/update :user_account)
+                    (h/set updates)
+                    (h/where [:= :email email]))]
+      (db/execute db query))
     (catch Exception _
       ;; if we fail, whatever just keep going
       nil)))
@@ -57,15 +63,17 @@
 (defn- get-public-link [first-name last-name]
   (str first-name "-" last-name "-" (u/get-nano-id-lowercase 6)))
 
-(defn create-user [db email first-name last-name image oauth-token]
+(defn create-user [db email {:keys [first-name last-name image provider-values
+                                    has-send-scope refresh-token]}]
   (let [public-link (get-public-link first-name last-name)
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image 
                              :public_link :public_link_message 
-                             :oauth_token)
-                  (h/values [[email first-name last-name image 
-                              public-link default-profile-message-template 
-                              (db/lift oauth-token)]])
+                             :oauth_token has-send-scope refresh-token)
+                  (h/values [[email first-name last-name image
+                              public-link default-profile-message-template
+                              (db/lift provider-values) has-send-scope
+                              refresh-token]])
                   (#(apply h/returning % user-columns)))]
     (->> query
          (db/->>execute db)
@@ -93,17 +101,16 @@
   ;
   )
 
-(defn get-user-oauth-tokens!
+(defn get-user-refresh-token!
   "These tokens are secure information that should be handled with care"
   [db email]
-  (let [query (-> (h/select :oauth_token)
+  (let [query (-> (h/select :refresh_token)
                   (h/from :user_account)
                   (h/where [:= :email email]))]
     (->> query
          (db/->>execute db)
          first
-         :oauth_token
-         u/kebab-case)))
+         :refresh_token)))
 
 (defn check-public-link 
   "returns nil if the link is fine. a string describing the error otherwise"
@@ -141,8 +148,3 @@
   (update-user-public-link db/local-db "tom@sharepage.io" "asdf")
   ;
   )
-
-(defn logout!
-  "This will delete the session out of the session. The user will
-   be required to login again to access the site"
-  [db {:keys [relevance-session]}])

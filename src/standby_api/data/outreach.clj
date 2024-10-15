@@ -130,18 +130,18 @@
   )
 
 (defn reply!
-  "Calling this method will create a draft email in the user's inbox!"
+  "Calling this method will send an email on behalf of the user! call with caution"
   [gmail-config db user uuid {:keys [message]}]
   (let [outreach (get-by-uuid db uuid)
-        {:keys [refresh-token]} (users/get-user-oauth-tokens! db (:email user))
+        refresh-token(users/get-user-refresh-token! db (:email user))
         {access-token :access_token} (gmail/get-access-token gmail-config refresh-token)]
-    (gmail/create-outreach-reply-draft access-token user outreach message)
+    (gmail/send-outreach-reply! access-token user outreach message)
     (update-outreach db uuid {:has-replied true :is-new false})))
 
 (comment
   (reply! (:google-api config/config)
           db/local-db
-          {:email "ryan@sharepage.io"
+          {:email "ryan@relevance.to"
            :mail-sync-status "ready"}
           "0191fdf7-ae27-7a30-80ed-527390b7fa5b"
           {:message "hi there"})
