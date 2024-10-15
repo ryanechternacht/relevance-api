@@ -50,12 +50,13 @@
                     refresh-token (assoc :refresh_token refresh-token)
                     ;; only update has send scope if it's a new refresh token
                     refresh-token (assoc :has_send_scope has-send-scope)
-                    provider-values (assoc :provider_values (db/lift provider-values)))
+                    provider-values (assoc :oauth_token (db/lift provider-values)))
           query (-> (h/update :user_account)
                     (h/set updates)
                     (h/where [:= :email email]))]
       (db/execute db query))
     (catch Exception _
+      (println "Error updating user from stytch" _)
       ;; if we fail, whatever just keep going
       nil)))
 
