@@ -42,6 +42,9 @@
   :gmail-sync {:ns-default standby-api.jobs.gmail-sync
                :exec-fn gmail-sync!
                :exec-args {}}
+  :weekly-digest {:ns-default standby-api.jobs.weekly-digest
+                  :exec-fn weekly-digest!
+                  :exec-args {}}
   :webserver {:ns-default standby-api.server
               :exec-fn webserver
               :exec-args {:port 3001

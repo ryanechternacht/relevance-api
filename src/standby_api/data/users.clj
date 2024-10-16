@@ -39,6 +39,11 @@
   ;
   )
 
+(defn get-all [db]
+  (let [query (base-user-query)]
+    (->> query
+         (db/->>execute db))))
+
 (defn update-user-from-stytch [db email {:keys [first-name last-name image
                                                 has-send-scope refresh-token
                                                 provider-values]}]

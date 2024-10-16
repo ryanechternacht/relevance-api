@@ -4,10 +4,8 @@
             [standby-api.data.outreach :as outreach]
             [standby-api.db :as db]
             [standby-api.external-api.aws :as aws]
-            [standby-api.middleware.config :as config]))
-
-;; for a user
-;; send email with these facts in them?
+            [standby-api.middleware.config :as config]
+            [standby-api.data.users :as users]))
 
 (def ^:private sample-max 10)
 (def ^:private weekly-digest-template (slurp "resources/weekly-digest.mustache"))
@@ -45,14 +43,44 @@
   "sends the weekly digest email to the supplied user"
   [aws-config frontend-url db {:keys [email]}]
   (let [data (get-outreach-data db email)
-        body (stache/render weekly-digest-template (merge data
-                                                          {:frontend-eul frontend-url}))]
-    (aws/send-email aws-config email weekly-digest-subject body)))
+        body (stache/render weekly-digest-template
+                            (merge data {:frontend-eul frontend-url}))
+        {:keys [cognitect.aws.http/status] :as result}
+        (aws/send-email aws-config email weekly-digest-subject body)]
+    (when status ;; only set on an error
+      (throw (ex-info "AWS SES returned an error" result)))))
 
 (comment
-  (send-user-weekly-digest! (:aws config/config)
-                            (-> config/config :front-end :base-url)
-                            db/local-db
-                            {:email "ryan@relevance.to"})
+  (try
+    (send-user-weekly-digest! (:aws config/config)
+                              (-> config/config :front-end :base-url)
+                              db/local-db
+                              {:email "ryan@sharepage.io"})
+    (catch Exception ex
+      (println ex)))
+  ;
+  )
+
+;; ;; a single argument is required for calling from deps.edn
+(defn weekly-digest! 
+  "This fn sends weekly digests to all users. BE CAREFUL"
+  [_]
+  (println "starting weekly digest job")
+  (let [db (:pg-db config/config)
+        aws (:aws config/config)
+        front-end-base-url (-> config/config :front-end :base-url)
+        users (users/get-all db)]
+    (doseq [{:keys [email] :as user} users]
+      (println "starting weekly digest for" email)
+      (try
+        (send-user-weekly-digest! aws front-end-base-url db user)
+        (println "weekly digest successfully sent for" email)
+        (catch Exception ex
+          (println "error sending weekly digest to" email)
+          (println ex)
+          (println ex-data))))))
+
+(comment
+  (weekly-digest! {})
   ;
   )
