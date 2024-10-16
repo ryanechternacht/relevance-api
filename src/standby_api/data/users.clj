@@ -70,7 +70,7 @@
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image 
                              :public_link :public_link_message 
-                             :oauth_token has-send-scope refresh-token)
+                             :oauth_token :has_send_scope :refresh_token)
                   (h/values [[email first-name last-name image
                               public-link default-profile-message-template
                               (db/lift provider-values) has-send-scope
@@ -135,7 +135,7 @@
   (let [check-query (-> (h/select 1)
                         (h/from :user_account)
                         (h/where [:and
-                                  [:= :public_link link]
+                                  [:= [:lower :public_link] [:lower link]]
                                   [:not= :email email]]))
         check-result (->> check-query
                           (db/->>execute db)
