@@ -78,7 +78,6 @@
 
 (def GET-signup
   (cpj/GET "/v0.1/signup" [stytch-token-type token :as {:keys [db config] :as req}]
-    (println "signup" req)
     (condp = stytch-token-type
       "oauth" (oauth-signup
                db
