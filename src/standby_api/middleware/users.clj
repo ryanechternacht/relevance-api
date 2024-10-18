@@ -3,9 +3,8 @@
             [standby-api.utilities :as u]))
 
 (defn- wrap-user-impl [handler {:keys [session db] :as request}]
-  (if-let [email (-> session :emails first :email)]
-    (let [user (u/kebab-case
-                (users/get-by-email db email))]
+  (if-let [email (-> session :member :emails first :email)]
+    (let [user (u/kebab-case (users/get-by-email db email))]
       (handler (assoc request :user user)))
     (handler request)))
 
