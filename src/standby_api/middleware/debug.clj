@@ -7,7 +7,8 @@
 
 (defn- remove-crsf-token
   [req]
-  (update req :body dissoc :__anti-forgery-token))
+  (cond-> req
+    (associative? (:body req)) (update :body dissoc :csrf-token)))
 
 ;; WARNING setting print? to :local will dump the entire request map which includes
 ;; info that should not be logged. Don't use it in prod!
@@ -16,7 +17,7 @@
 (defn- wrap-debug-impl [handler {:keys [config request-method uri] :as request}]
   (let [print? (-> config :debug :print?)]
     (condp = print?
-      :prod (println "request" request-method uri (-> request :body remove-crsf-token))
+      :prod (println "request" request-method uri (remove-crsf-token request))
       :local (println "request" request-method uri (remove-annoying-field request)))
     (let [response (handler request)]
       (condp = print?
