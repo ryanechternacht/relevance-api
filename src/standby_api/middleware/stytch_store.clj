@@ -17,7 +17,7 @@
       {:member stytch_member_json
        :csrf-token csrf_token})))
 
-(defn- cache-stytch-login [db session-token stytch-member]
+(defn cache-stytch-login [db session-token stytch-member]
   (let [insert-query (-> (h/insert-into :session_cache)
                          (h/columns :stytch_session_id :stytch_member_json :valid_until :csrf_token)
                          (h/values [[session-token [:lift stytch-member] [:raw (str "NOW() + INTERVAL '" 30 " MINUTES'")] (random/base64 60)]])
@@ -53,12 +53,9 @@
     ;; update what we have in the db
     (when session-token
       (if-let [session-data (check-db-for-cached-session db session-token)]
-        (do
-          session-data)
-        (if-let [member (stytch/authenticate-session stytch-config session-token)]
-
-          (cache-stytch-login db session-token member)
-          (println "member failed?" stytch-config)))))
+        session-data
+        (when-let [member (stytch/authenticate-session stytch-config session-token)]
+          (cache-stytch-login db session-token member)))))
   (write-session
     [_ _ value]
     value)

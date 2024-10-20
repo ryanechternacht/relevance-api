@@ -5,6 +5,7 @@
             [ring.util.http-response :as response]))
 
 ;; adapted from and simplified from ring anti-forgery middleware
+;; The csrf token is set our modified session middleware when a session is created
 
 (defn- session-token [request]
   (get-in request [:session :csrf-token]))

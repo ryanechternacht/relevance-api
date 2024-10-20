@@ -1,18 +1,19 @@
 (ns standby-api.routes.auth
-  (:require ;; [clj-http.client :as http]
-            [compojure.core :as cpj]
+  (:require [compojure.core :as cpj]
             [standby-api.external-api.stytch :as stytch]
             [standby-api.data.users :as users]
-            ;; [standby-api.data.gmail-sync :as gmail-sync]
+            [standby-api.middleware.stytch-store :as stytch-store]
             [ring.util.http-response :as response]))
 
-(defn set-session [session_token response]
+(defn set-session [session_token csrf-token response]
   ;; TODO only on local
   ;; this is needed because we can only set use http for localhost in stytch, and I haven't setup
   ;; https locally yet
   ;; (println "for browser:" "relevance-session" session_token ".buyersphere-local.com")
   ;; (println "for postman:" (format "relevance-session%s" session_token))
-  (assoc response :session session_token))
+  (-> response 
+      (assoc :session session_token)
+      (assoc :session-csrf-token csrf-token)))
 
 (def ^:private gmail-send-scope "https://www.googleapis.com/auth/gmail.send")
 
@@ -54,7 +55,9 @@
     (if session-token
       (do
         (users/update-user-from-stytch db email stytch-values)
-        (set-session session-token (response/found front-end-base-url)))
+        (let [user (stytch/authenticate-session stytch-config session-token)
+              {:keys [csrf-token]} (stytch-store/cache-stytch-login db session-token user)]
+          (set-session session-token csrf-token (response/found front-end-base-url))))
       (response/found (str front-end-base-url "/login")))))
 
 (def GET-login
@@ -73,7 +76,9 @@
     (if session-token
       (do
         (users/create-user db email stytch-values)
-        (set-session session-token (response/found front-end-base-url)))
+        (let [user (stytch/authenticate-session stytch-config session-token)
+              {:keys [csrf-token]} (stytch-store/cache-stytch-login db session-token user)]
+          (set-session session-token csrf-token (response/found front-end-base-url))))
       (response/found (str front-end-base-url "/login")))))
 
 (def GET-signup
