@@ -24,7 +24,7 @@
    {:first-name 
    :last-name 
    :email 
-   :profile-picture-url
+   :image
    :session-token
    :has-send-scope
    :refresh-token
@@ -43,7 +43,7 @@
     {:first-name first-name
      :last-name last-name
      :email email
-     :profile-picture-url profile-picture-url
+     :image profile-picture-url
      :session-token session-token
      :has-send-scope has-send-scope
      :refresh-token refresh-token
