@@ -69,11 +69,8 @@
                                session-attrs
                                {:value (or new-session-key session-key)})}
         new-csrf-token (:session-csrf-token response)
-        _ (println "new csrf" new-csrf-token)
         csrf-cookie {csrf-cookie-name (merge csrf-cookie-attrs
                                              {:value new-csrf-token})}
-        _ (println "csrf-cookie" csrf-cookie)
-        _ (println "csrf-cookie-attrs" csrf-cookie-attrs)
         response (dissoc response :session :session-cookie-attrs)]
     (if (or (and new-session-key (not= session-key new-session-key))
             (and session-attrs (or new-session-key session-key)))
