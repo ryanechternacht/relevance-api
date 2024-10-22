@@ -50,7 +50,7 @@
 ;; implement this per-route for now. 
 
 (defn csrf-failure-response []
-  (response/forbidden "<h1>Invalid anti-forgery token</h1>"))
+  (response/forbidden {:error "invalid csrf token"}))
 
 (defn valid-csrf? [{{session-csrf-token :csrf-token} :session {request-csrf-token :csrf-token} :body :as req}]
   (crypto/eq? session-csrf-token request-csrf-token))
