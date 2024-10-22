@@ -1,7 +1,8 @@
 (ns standby-api.routes.users
   (:require [compojure.core :as cpj]
             [ring.util.http-response :as response]
-            [standby-api.data.users :as users]))
+            [standby-api.data.users :as users]
+            [standby-api.middleware.csrf :as csrf]))
 
 (def GET-users-me
   (cpj/GET "/v0.1/users/me" {user :user}
@@ -20,17 +21,18 @@
       (response/unauthorized))))
 
 (def PATCH-users-me-public-link
-  (cpj/PATCH "/v0.1/users/me/public-link" {:keys [db user body]}
-    (if user
-      (let [link (:public-link body)]
-        (if-let [error (users/check-public-link link)]
-          (response/bad-request {:error error})
-          (if-let [result (users/update-user-public-link db
-                                                         (:email user)
-                                                         link)]
-            (response/ok result)
-            (response/bad-request {:error "public link in user by another user"}))))
-      (response/unauthorized))))
+  (cpj/PATCH "/v0.1/users/me/public-link" {:keys [db user body] :as req}
+    (cond
+      (not user) (response/unauthorized)
+      (not (csrf/valid-csrf? req)) (csrf/csrf-failure-response)
+      :else (let [link (:public-link body)]
+              (if-let [error (users/check-public-link link)]
+                (response/bad-request {:error error})
+                (if-let [result (users/update-user-public-link db
+                                                               (:email user)
+                                                               link)]
+                  (response/ok result)
+                  (response/bad-request {:error "public link in user by another user"})))))))
 
 ;; This isn't correctly clearly frontend cookies, but w/e
 ;; the real issue is that creates "failures" on our backend
