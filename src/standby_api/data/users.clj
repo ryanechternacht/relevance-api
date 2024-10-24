@@ -11,7 +11,8 @@
    :user_account.first_name :user_account.last_name
    :user_account.image :user_account.public_link
    :user_account.public_link_message :user_account.relevancies 
-   :user_account.onboarding_step :user_account.has-send-scope])
+   :user_account.onboarding_step :user_account.has-send-scope
+   :user_account.created_at])
 
 (defn- base-user-query []
   (-> (apply h/select user-columns)

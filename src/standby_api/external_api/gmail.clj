@@ -1,11 +1,13 @@
 (ns standby-api.external-api.gmail
   (:require [cheshire.core :as json]
             [clj-http.client :as http]
-            ;; [cljstache.core :as stache]
-            [clojure.string :as str])
+            [cljstache.core :as stache]
+            [clojure.string :as str]
+            [standby-api.data.users :as users]
+            [standby-api.db :as db])
   (:import java.util.Base64))
 
-;; (def email-body-template (slurp "resources/email-response.mustache"))
+(def email-body-template (slurp "resources/email-response.mustache"))
 
 (defn get-access-token [{:keys [client-id client-secret]} refresh-token]
   (try
@@ -22,17 +24,17 @@
       (println ex)
       (throw ex))))
 
-;; (defn gmail-api-get [access-token url]
-;;   (try
-;;     (-> (http/get (str "https://www.googleapis.com/gmail/v1/" url)
-;;                   {:as :json
-;;                    :accept :json
-;;                    :content-type :json
-;;                    :oauth-token access-token})
-;;         :body)
-;;     (catch Exception ex
-;;       (println "gmail-api-get exception")
-;;       (println ex))))
+(defn gmail-api-get [access-token url]
+  (try
+    (-> (http/get (str "https://www.googleapis.com/gmail/v1/" url)
+                  {:as :json
+                   :accept :json
+                   :content-type :json
+                   :oauth-token access-token})
+        :body)
+    (catch Exception ex
+      (println "gmail-api-get exception")
+      (println ex))))
 
 (defn gmail-api-post [access-token url body]
   (try
@@ -60,44 +62,74 @@
       (str/replace #"\+" "-")
       (str/replace #"\/" "_")))
 
-;; I'm not convinced this is quite right, but it's probably mostly right
-;; (defn- get-domain-from-email [email]
-;;   (-> email
-;;       (str/split #"@")
-;;       second
-;;       (str/replace #">" "")))
+(defn parse-from-email 
+  "turns an email like 'notion <notion@notion.com>' into 'notion@notion.com'"
+  [header-email]
+  (-> header-email
+      (str/replace #".*<" "")
+      (str/replace #">" "")))
 
-;; (defn is-sender-internal? [user-email from-email]
-;;   (= (get-domain-from-email user-email) (get-domain-from-email from-email)))
+;; I'm not convinced this is quite right, but it's probably mostly right
+(defn- get-domain-from-email [email]
+  (-> email
+      (str/split #"@")
+      second
+      (str/replace #">" "")))
+
+(defn is-sender-internal? [user-email from-email]
+  (= (get-domain-from-email user-email) (get-domain-from-email from-email)))
 
 (comment
-  ;; (get-domain-from-email "ryan@sharepage.io")
-  ;; (get-domain-from-email "Notion <notify@mail.notion.so>")
+  (parse-from-email  "Notion <notify@mail.notion.so>")
+  (parse-from-email  "notify@mail.notion.so")
 
-  ;; (is-sender-internal? "ryan@sharepage.io" "tom@sharepage.io")
-  ;; (is-sender-internal? "ryan@sharepage.io" "tom@swaypage.io")
+  (get-domain-from-email "ryan@sharepage.io")
+  (get-domain-from-email "Notion <notify@mail.notion.so>")
+
+  (is-sender-internal? "ryan@sharepage.io" "tom@sharepage.io")
+  (is-sender-internal? "ryan@sharepage.io" "tom@swaypage.io")
   ;
   )
 
-;; (defn does-message-have-label? [message label-id]
-;;   (->> message
-;;        :labelIds
-;;        (filter #(= % label-id))
-;;        seq))
+(defn does-message-have-label? [message label-id]
+  (->> message
+       :labelIds
+       (filter #(= % label-id))
+       seq))
 
 (comment
-  ;; (does-message-have-label? {:id "19206daeae5912f8",
-  ;;                            :threadId "19206daeae5912f8",
-  ;;                            :labelIds ["Label_6805839102955159862",
-  ;;                                       "IMPORTANT",
-  ;;                                       "CATEGORY_PERSONAL"]}
-  ;;                           "Label_6805839102955159862")
-  ;; (does-message-have-label? {:id "19206daeae5912f8",
-  ;;                            :threadId "19206daeae5912f8",
-  ;;                            :labelIds ["Label_6805839102955159862",
-  ;;                                       "IMPORTANT",
-  ;;                                       "CATEGORY_PERSONAL"]}
-  ;;                           "asdf")
+  (does-message-have-label? {:id "19206daeae5912f8",
+                             :threadId "19206daeae5912f8",
+                             :labelIds ["Label_6805839102955159862",
+                                        "IMPORTANT",
+                                        "CATEGORY_PERSONAL"]}
+                            "Label_6805839102955159862")
+  (does-message-have-label? {:id "19206daeae5912f8",
+                             :threadId "19206daeae5912f8",
+                             :labelIds ["Label_6805839102955159862",
+                                        "IMPORTANT",
+                                        "CATEGORY_PERSONAL"]}
+                            "asdf")
+  ;
+  )
+
+(defn has-prior-correspondence-with-sender? [access-token relevance-signup-date relevance-label sender-email]
+  (println "has-prior" access-token relevance-signup-date sender-email)
+  (let [formatted-signup-date (-> relevance-signup-date .toInstant .getEpochSecond)
+        q (str "{{from:" sender-email " to:" sender-email "} AND before:" formatted-signup-date " to:" sender-email " AND -label:" relevance-label "}")
+        url (str "/users/me/threads?q=" q)]
+    (-> (gmail-api-get access-token url)
+        :threads
+        count
+        (#(> % 0)))))
+
+(comment
+  #_{:clj-kondo/ignore [:unresolved-symbol]}
+  (let [{:keys [created_at]} (users/get-by-email db/local-db "ryan@relevance.to")]
+    (has-prior-correspondence-with-sender? <access-token>
+                                           created_at
+                                           "Relevance"
+                                           "ryan@sharepage.io"))
   ;
   )
 
@@ -129,63 +161,63 @@
   ;
   )
 
-;; (defn get-threads [access-token]
-;;   (let [resp (gmail-api-get access-token "/users/me/threads?includeSpamTrash=true")]
-;;     (-> resp
-;;         :threads)))
+(defn get-threads [access-token]
+  (let [resp (gmail-api-get access-token "/users/me/threads?includeSpamTrash=true")]
+    (-> resp
+        :threads)))
 
-;; (defn get-threads-after-history [access-token history-id]
-;;   (->> (get-threads access-token)
-;;        (filter #(> (parse-long (:historyId %)) history-id))))
+(defn get-threads-after-history [access-token history-id]
+  (->> (get-threads access-token)
+       (filter #(> (parse-long (:historyId %)) history-id))))
 
-;; (defn get-largest-thread-history [threads]
-;;   (->> threads
-;;        (map :historyId)
-;;        (map parse-long)
-;;        (reduce max)))
+(defn get-largest-thread-history [threads]
+  (->> threads
+       (map :historyId)
+       (map parse-long)
+       (reduce max)))
 
 (comment
-  ;; (get-largest-thread-history [{:historyId "1234"} {:historyId "12345"} {:historyId "123"}])
+  (get-largest-thread-history [{:historyId "1234"} {:historyId "12345"} {:historyId "123"}])
   ;
   )
 
-;; (defn archive-and-apply-our-label [access-token thread-id label-id]
-;;   (gmail-api-post access-token
-;;                   (str "users/me/threads/" thread-id "/modify")
-;;                   {:addLabelIds [label-id]
-;;                    :removeLabelIds ["INBOX" "UNREAD"]}))
+(defn archive-and-apply-our-label [access-token thread-id label-id]
+  (gmail-api-post access-token
+                  (str "users/me/threads/" thread-id "/modify")
+                  {:addLabelIds [label-id]
+                   :removeLabelIds ["INBOX" "UNREAD"]}))
 
 (comment
-  ;; #_{:clj-kondo/ignore [:unresolved-symbol]}
-  ;; (archive-and-apply-our-label <access-token>
-  ;;                              "19206daeae5912f8"
-  ;;                              "Label_6805839102955159862")
+  #_{:clj-kondo/ignore [:unresolved-symbol]}
+  (archive-and-apply-our-label "ya29.a0AcM612zVMV4e9w0dkBo5sbPAKha5l18oyHS5aWJQkLTCb1IweuREAxvMxONtYjUobbBok4j-TvK_8vb6LhAyNz6n143Aue7x_mxx-WviQuUYZdhiz3Xiz6NW4vKQt-PYny1oCIT5-87TpdEwLy-YNG1l3ge9zRUhQszbJkIQQAaCgYKAX8SARESFQHGX2MifV32LPj3eeCdPn2ywjbMMQ0177"
+                               "192ba4e62a9be609"
+                               "Label_1330615818894066579")
   ;
   )
 
 ;; POST https://gmail.googleapis.com/gmail/v1/users/{userId}/labels
 
-;; (defn make-label [access-token label-name]
-;;   (gmail-api-post access-token
-;;                   "users/me/labels"
-;;                   {:name label-name}))
+(defn make-label [access-token label-name]
+  (gmail-api-post access-token
+                  "users/me/labels"
+                  {:name label-name}))
 
-;; (defn- get-info-to-thread
-;;   "pulls out the fields we need to make sure this email threads correctly"
-;;   [thread]
-;;   (let [first-message-headers (-> thread :messages first :payload :headers)]
-;;     {:message-id (->> first-message-headers
-;;                       (filter #(= (:name %) "Message-ID"))
-;;                       first
-;;                       :value)
-;;      :subject (->> first-message-headers
-;;                    (filter #(= (:name %) "Subject"))
-;;                    first
-;;                    :value)
-;;      :recipient (->> first-message-headers
-;;                      (filter #(= (:name %) "From"))
-;;                      first
-;;                      :value)}))
+(defn- get-info-to-thread
+  "pulls out the fields we need to make sure this email threads correctly"
+  [thread]
+  (let [first-message-headers (-> thread :messages first :payload :headers)]
+    {:message-id (->> first-message-headers
+                      (filter #(= (:name %) "Message-ID"))
+                      first
+                      :value)
+     :subject (->> first-message-headers
+                   (filter #(= (:name %) "Subject"))
+                   first
+                   :value)
+     :recipient (->> first-message-headers
+                     (filter #(= (:name %) "From"))
+                     first
+                     :value)}))
 
 ;; Appropriately formatted email should look like this
 
@@ -197,46 +229,46 @@
 
 ;; I sent this from the API! hopefully it threads!
 
-;; (defn- make-relevance-auto-reponse-email [front-end-base-url {:keys [email public-link first-name]} thread]
-;;   (let [{:keys [recipient message-id subject]} (get-info-to-thread thread)
-;;         body (stache/render email-body-template
-;;                             {:front-end-base-url front-end-base-url
-;;                              :public-link public-link
-;;                              :first-name first-name})]
-;;     (str "From: <" email ">\n"
-;;          "To: " recipient "\n"
-;;          "References: " message-id "\n"
-;;          "In-Reply-To: " message-id "\n"
-;;          "Subject: " subject "\n"
-;;          "\n"
-;;          body)))
+(defn- make-relevance-auto-reponse-email [front-end-base-url {:keys [email public-link first-name]} thread]
+  (let [{:keys [recipient message-id subject]} (get-info-to-thread thread)
+        body (stache/render email-body-template
+                            {:front-end-base-url front-end-base-url
+                             :public-link public-link
+                             :first-name first-name})]
+    (str "From: <" email ">\n"
+         "To: " recipient "\n"
+         "References: " message-id "\n"
+         "In-Reply-To: " message-id "\n"
+         "Subject: " subject "\n"
+         "\n"
+         body)))
 
-;; (defn send-relevance-response [front-end-base-url access-token thread user]
-;;   (let [email-text (make-relevance-auto-reponse-email front-end-base-url user thread)]
-;;     (gmail-api-post access-token
-;;                     "users/me/messages/send"
-;;                     {:raw (base64-url-encode email-text)
-;;                      :threadId (:id thread)})))
+(defn send-relevance-response [front-end-base-url access-token thread user]
+  (let [email-text (make-relevance-auto-reponse-email front-end-base-url user thread)]
+    (gmail-api-post access-token
+                    "users/me/messages/send"
+                    {:raw (base64-url-encode email-text)
+                     :threadId (:id thread)})))
 
 (comment
-  ;; #_{:clj-kondo/ignore [:unresolved-symbol]}
-  ;; (try
-  ;;   (send-relevance-response "http://app.buyersphere-local.com"
-  ;;                            <access-token>
-  ;;                            {:id "19206daeae5912f8"
-  ;;                             :messages [{:payload
-  ;;                                         {:headers
-  ;;                                          [{:name "From",
-  ;;                                            :value "ryan echternacht <ryan@echternacht.org>"}
-  ;;                                           {:name "Message-ID",
-  ;;                                            :value "<CAKTjL-3XuM+-01SdvJ5FDguiUF=9fSto9qHW-XSaaBaS5XwtTg@mail.gmail.com>"}
-  ;;                                           {:name "Subject",
-  ;;                                            :value "How to use digital transformation"}]}}]}
-  ;;                            {:email "ryan@sharepage.io"
-  ;;                             :first-name "ryan"
-  ;;                             :public-link "asdf"})
-  ;;   (catch Exception ex
-  ;;     ex))
+  #_{:clj-kondo/ignore [:unresolved-symbol]}
+  (try
+    (send-relevance-response "http://app.buyersphere-local.com"
+                             <access-token>
+                             {:id "192ba4e62a9be609"
+                              :messages [{:payload
+                                          {:headers
+                                           [{:name "From",
+                                             :value "ryan echternacht <ryan@echternacht.org>"}
+                                            {:name "Message-ID",
+                                             :value "<CAKTjL-38QELTr1Fr0ddcRu4KkSyitQibE3K58LnUd=hQAZ6Pig@mail.gmail.com>"}
+                                            {:name "Subject",
+                                             :value "This is a test email"}]}}]}
+                             {:email "ryan@relevance.to"
+                              :first-name "ryan"
+                              :public-link "asdf"})
+    (catch Exception ex
+      ex))
   ;
   )
 
@@ -265,7 +297,7 @@
          "\n"
          draft-body)))
 
-(defn send-outreach-reply! 
+(defn send-outreach-reply!
   "this function will send an email on behalf of a user. use with care"
   [access-token user outreach message]
   (let [email-text (make-reply-email (:email user) outreach message)]
