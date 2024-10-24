@@ -174,7 +174,7 @@
   (->> threads
        (map :historyId)
        (map parse-long)
-       (reduce max)))
+       (reduce max 0)))
 
 (comment
   (get-largest-thread-history [{:historyId "1234"} {:historyId "12345"} {:historyId "123"}])
