@@ -1,15 +1,6 @@
 (ns standby-api.middleware.session-csrf
   "Adapted from default ring session middleware. We need to set 2 cookies
-   (the session and a csrf token generated with the session), so I copied + modified.
-   
-   Middleware for maintaining browser sessions using cookies.
-
-  Sessions are stored using types that adhere to the
-  ring.middleware.session.store/SessionStore protocol.
-  Ring comes with two stores included:
-
-    ring.middleware.session.memory/memory-store
-    ring.middleware.session.cookie/cookie-store"
+   (the session and a csrf token generated with the session), so I copied + modified."
   (:require [ring.middleware.cookies :as cookies]
             [ring.middleware.session.store :as store]
             [ring.middleware.session.memory :as mem]))
