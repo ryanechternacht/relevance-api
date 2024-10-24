@@ -1,10 +1,9 @@
 (ns standby-api.middleware.users
-  (:require [standby-api.data.users :as users]
-            [standby-api.utilities :as u]))
+  (:require [standby-api.data.users :as users]))
 
 (defn- wrap-user-impl [handler {:keys [session db] :as request}]
   (if-let [email (-> session :member :emails first :email)]
-    (let [user (u/kebab-case (users/get-by-email db email))]
+    (let [user (users/get-by-email db email)]
       (handler (assoc request :user user)))
     (handler request)))
 

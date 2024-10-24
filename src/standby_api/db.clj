@@ -1,10 +1,13 @@
 (ns standby-api.db
-  (:require [cheshire.core :as json]
+  (:require [camel-snake-kebab.core :as csk]
+            [camel-snake-kebab.extras :as cske]
+            [cheshire.core :as json]
             [honey.sql :as sql]
             [next.jdbc :as jdbc]
             [next.jdbc.date-time]
             [next.jdbc.prepare :as prepare]
-            [next.jdbc.result-set :as rs])
+            [next.jdbc.result-set :as rs]
+            [standby-api.db :as db])
   (:import [java.sql PreparedStatement]
            [org.postgresql.util PGobject]))
 
@@ -29,9 +32,13 @@
   ([_ query]
    (sql/format query)))
 
+;; the csk calls here are exactly what u/kebab-case does, but we can't
+;; reference it directly cuz it was could a circular dependency
 (defn execute [db query]
-  (jdbc/execute! db (sql/format query)
-                 {:builder-fn rs/as-unqualified-lower-maps}))
+  (->> (jdbc/execute! db
+                      (sql/format query)
+                      {:builder-fn  rs/as-unqualified-lower-maps})
+       (map (partial cske/transform-keys csk/->kebab-case-keyword))))
 
 (defn ->execute
   "query comes first for use in -> threading macros"

@@ -4,7 +4,6 @@
             [standby-api.utilities :as u]
             [standby-api.middleware.config :as config]
             [standby-api.external-api.gmail :as gmail]
-            ;; [standby-api.data.gmail-sync :as gmail-sync]
             [standby-api.data.users :as users]))
 
 (def outreach-columns
@@ -46,11 +45,11 @@
           (db/->>execute db)))))
 
 (comment
-  (get-by-user db/local-db "ryan@sharepage.io")
-  (get-by-user db/local-db "ryan@sharepage.io" "ignored")
-  (get-by-user db/local-db "ryan@sharepage.io" "new")
-  (get-by-user db/local-db "ryan@sharepage.io" "saved")
-  (get-by-user db/local-db "ryan@sharepage.io" "replied")
+  (get-by-user db/local-db "ryan@relevance.to")
+  (get-by-user db/local-db "ryan@relevance.to" "ignored")
+  (get-by-user db/local-db "ryan@relevance.to" "new")
+  (get-by-user db/local-db "ryan@relevance.to" "saved")
+  (get-by-user db/local-db "ryan@relevance.to" "replied")
   ;
   )
 
@@ -109,7 +108,7 @@
          first)))
 
 (comment
-  (update-outreach db/local-db "01921704-9703-75f4-85ee-db3710a21df0" {:is_new false :is_spam true})
+  (update-outreach db/local-db "01921704-9703-75f4-85ee-db3710a21df0" {:is-new false :is-spam true})
   ;
   )
 
@@ -117,7 +116,7 @@
   "Calling this method will send an email on behalf of the user! call with caution"
   [gmail-config db user uuid {:keys [message]}]
   (let [outreach (get-by-uuid db uuid)
-        refresh-token(users/get-user-refresh-token! db (:email user))
+        refresh-token (users/get-user-refresh-token! db (:email user))
         {access-token :access_token} (gmail/get-access-token gmail-config refresh-token)]
     (gmail/send-outreach-reply! access-token user outreach message)
     (update-outreach db uuid {:has-replied true :is-new false})))

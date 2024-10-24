@@ -45,13 +45,13 @@
                                                 provider-values]}]
   (try
     (let [updates (cond-> {}
-                    (not (str/blank? first-name)) (assoc :first_name first-name)
-                    (not (str/blank? last-name)) (assoc :last_name last-name)
+                    (not (str/blank? first-name)) (assoc :first-name first-name)
+                    (not (str/blank? last-name)) (assoc :last-name last-name)
                     (not (str/blank? image)) (assoc :image image)
-                    refresh-token (assoc :refresh_token refresh-token)
+                    refresh-token (assoc :refresh-token refresh-token)
                     ;; only update has send scope if it's a new refresh token
-                    refresh-token (assoc :has_send_scope has-send-scope)
-                    provider-values (assoc :oauth_token (db/lift provider-values)))
+                    refresh-token (assoc :has-send-scope has-send-scope)
+                    provider-values (assoc :oauth-token (db/lift provider-values)))
           query (-> (h/update :user_account)
                     (h/set updates)
                     (h/where [:= :email email]))]
@@ -112,7 +112,7 @@
     (->> query
          (db/->>execute db)
          first
-         :refresh_token)))
+         :refresh-token)))
 
 (defn check-public-link 
   "returns nil if the link is fine. a string describing the error otherwise"

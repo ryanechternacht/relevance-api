@@ -10,12 +10,12 @@
                   (h/from :session_cache)
                   (h/where [:= :stytch_session_id session-token]
                            [:>= :valid_until :current_timestamp]))
-        {:keys [stytch_member_json csrf_token]} (->> query
+        {:keys [stytch-member-json csrf-token]} (->> query
                                                      (db/->>execute db)
                                                      first)]
-    (when stytch_member_json
-      {:member stytch_member_json
-       :csrf-token csrf_token})))
+    (when stytch-member-json
+      {:member stytch-member-json
+       :csrf-token csrf-token})))
 
 (defn cache-stytch-login [db session-token stytch-member]
   (let [insert-query (-> (h/insert-into :session_cache)
@@ -27,11 +27,11 @@
         get-query (-> (h/select :stytch_member_json :csrf_token)
                       (h/from :session_cache)
                       (h/where [:= :stytch_session_id session-token]))
-        {:keys [stytch_member_json csrf_token]} (->> get-query
+        {:keys [stytch-member-json csrf-token]} (->> get-query
                                                      (db/->>execute db)
                                                      first)]
-    {:member stytch_member_json
-     :csrf-token csrf_token}))
+    {:member stytch-member-json
+     :csrf-token csrf-token}))
 
 (defn- remove-session [db session-token]
   (let [query (-> (h/delete-from :session_cache)

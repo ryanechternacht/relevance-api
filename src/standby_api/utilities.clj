@@ -102,8 +102,8 @@
   ;
   )
 
-(defn kebab-case [coll]
-  (cske/transform-keys csk/->kebab-case-keyword coll))
+(def kebab-case
+  (partial cske/transform-keys csk/->kebab-case-keyword))
 
 (comment
   (kebab-case {:a_b 1 :c_d "hello"})

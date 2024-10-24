@@ -5,14 +5,14 @@
             [standby-api.middleware.stytch-store :as stytch-store]
             [ring.util.http-response :as response]))
 
-(defn set-session [session_token csrf-token response]
+(defn set-session [session-token csrf-token response]
   ;; TODO only on local
   ;; this is needed because we can only set use http for localhost in stytch, and I haven't setup
   ;; https locally yet
   ;; (println "for browser:" "relevance-session" session_token ".buyersphere-local.com")
   ;; (println "for postman:" (format "relevance-session%s" session_token))
   (-> response 
-      (assoc :session session_token)
+      (assoc :session session-token)
       (assoc :session-csrf-token csrf-token)))
 
 (def ^:private gmail-send-scope "https://www.googleapis.com/auth/gmail.send")
