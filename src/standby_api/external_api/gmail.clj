@@ -9,6 +9,7 @@
 
 (def email-body-template (slurp "resources/email-response.mustache"))
 
+;; TODO remove these catches and have higher levels catch?
 (defn get-access-token [{:keys [client-id client-secret]} refresh-token]
   (try
     (-> (http/post (str "https://oauth2.googleapis.com/token"
@@ -34,7 +35,8 @@
         :body)
     (catch Exception ex
       (println "gmail-api-get exception")
-      (println ex))))
+      (println ex)
+      (throw ex))))
 
 (defn gmail-api-post [access-token url body]
   (try
@@ -47,7 +49,8 @@
         :body)
     (catch Exception ex
       (println "gmail-api-post exception")
-      (println ex))))
+      (println ex)
+      (throw ex))))
 
 ;; (defn- base64-url-decode [to-decode]
 ;;   (-> to-decode
@@ -62,7 +65,7 @@
       (str/replace #"\+" "-")
       (str/replace #"\/" "_")))
 
-(defn parse-from-email 
+(defn parse-from-email
   "turns an email like 'notion <notion@notion.com>' into 'notion@notion.com'"
   [header-email]
   (-> header-email
@@ -114,7 +117,6 @@
   )
 
 (defn has-prior-correspondence-with-sender? [access-token relevance-signup-date relevance-label sender-email]
-  (println "has-prior" access-token relevance-signup-date sender-email)
   (let [formatted-signup-date (-> relevance-signup-date .toInstant .getEpochSecond)
         q (str "{{from:" sender-email " to:" sender-email "} AND before:" formatted-signup-date " to:" sender-email " AND -label:" relevance-label "}")
         url (str "/users/me/threads?q=" q)]
@@ -189,7 +191,7 @@
 
 (comment
   #_{:clj-kondo/ignore [:unresolved-symbol]}
-  (archive-and-apply-our-label "ya29.a0AcM612zVMV4e9w0dkBo5sbPAKha5l18oyHS5aWJQkLTCb1IweuREAxvMxONtYjUobbBok4j-TvK_8vb6LhAyNz6n143Aue7x_mxx-WviQuUYZdhiz3Xiz6NW4vKQt-PYny1oCIT5-87TpdEwLy-YNG1l3ge9zRUhQszbJkIQQAaCgYKAX8SARESFQHGX2MifV32LPj3eeCdPn2ywjbMMQ0177"
+  (archive-and-apply-our-label <access-token>
                                "192ba4e62a9be609"
                                "Label_1330615818894066579")
   ;
@@ -197,10 +199,30 @@
 
 ;; POST https://gmail.googleapis.com/gmail/v1/users/{userId}/labels
 
+(defn- find-label [access-token label-name]
+  (let [{:keys [labels]} (gmail-api-get access-token
+                                        "users/me/labels")]
+    (->> labels
+         (filter #(= (str/lower-case (:name %)) (str/lower-case label-name)))
+         first)))
+
+(comment
+  #_{:clj-kondo/ignore [:unresolved-symbol]}
+  (find-label <access-token>
+              "Relevance")
+  ;
+  )
+
 (defn make-label [access-token label-name]
-  (gmail-api-post access-token
-                  "users/me/labels"
-                  {:name label-name}))
+  (try
+    (gmail-api-post access-token
+                    "users/me/labels"
+                    {:name label-name})
+    (catch Exception ex
+      (let [{:keys [status]} (ex-data ex)]
+        (if (= status 409)
+          (find-label access-token label-name)
+          (throw ex))))))
 
 (defn- get-info-to-thread
   "pulls out the fields we need to make sure this email threads correctly"

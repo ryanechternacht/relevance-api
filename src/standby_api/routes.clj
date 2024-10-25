@@ -40,8 +40,10 @@
   outreach/POST-outreach
   outreach/GET-outreach-uuid
   users/GET-users-me
+  users/GET-users-me-gmail-sync
   users/GET-users-shortcode
   users/PATCH-users-me
+  users/PATCH-users-me-gmail-sync
   users/PATCH-users-me-public-link
   users/GET-users-me-logout
   get-404

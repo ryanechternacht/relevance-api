@@ -16,6 +16,7 @@
       (assoc :session-csrf-token csrf-token)))
 
 (def ^:private gmail-send-scope "https://www.googleapis.com/auth/gmail.send")
+(def ^:private gmail-modify-scope-scope "https://www.googleapis.com/auth/gmail.modify")
 
 (defn- process-stytch-token
   "processes a stytch session token to return the set of values we care about.
@@ -27,6 +28,7 @@
    :image
    :session-token
    :has-send-scope
+   :has-gmail-modify-scope
    :refresh-token
    :provider-values}
    
@@ -39,13 +41,18 @@
   (let [has-send-scope (->> scopes
                             (filter #(= % gmail-send-scope))
                             first
-                            boolean)]
+                            boolean)
+        has-gmail-modify-scope (->> scopes
+                                    (filter #(= % gmail-modify-scope-scope))
+                                    first
+                                    boolean)]
     {:first-name first-name
      :last-name last-name
      :email email
      :image profile-picture-url
      :session-token session-token
      :has-send-scope has-send-scope
+     :has-gmail-modify-scope has-gmail-modify-scope
      :refresh-token refresh-token
      :provider-values provider-values}))
 
@@ -90,39 +97,3 @@
                (-> config :front-end :base-url)
                token)
       (response/bad-request "Unknown stytch_token_type"))))
-
-;; (defn- prepare-email-auth [{:keys [client-id redirect-uri scopes]} db email]
-;;   (let [{oauth-state :oauth_state} (gmail-sync/setup-auth db email)]
-;;     (response/see-other
-;;      (str "https://accounts.google.com/o/oauth2/v2/auth"
-;;           "?client_id=" client-id
-;;           "&redirect_uri=" redirect-uri
-;;           "&response_type=code"
-;;           "&scope=" scopes
-;;           "&include_granted_scopes=true"
-;;           "&access_type=offline"
-;;           "&login_hint=" email
-;;           "&prompt=consent" ;; forces a full flow which makes sure we also get a refresh token (and should help fix any auth issues)
-;;           "&state=" oauth-state))))
-
-;; (defn- complete-auth-flow [front-end-base-url {:keys [client-id client-secret redirect-uri]} db code state]
-;;   (let [token (-> (http/post (str "https://oauth2.googleapis.com/token"
-;;                                   "?client_id=" client-id
-;;                                   "&client_secret=" client-secret
-;;                                   "&code=" code
-;;                                   "&grant_type=authorization_code"
-;;                                   "&redirect_uri=" redirect-uri)
-;;                             {:accept :json
-;;                               :as :json})
-;;                   :body)
-;;         {user-email :user_email} (gmail-sync/save-token db state token)]
-;;     (users/update-user db user-email {:mail-sync-status "ready"})
-;;     (response/see-other (str front-end-base-url "/app/settings"))))
-
-;; (def GET-gmail-approval
-;;   (cpj/GET "/v0.1/gmail-approval" [code state :as {:keys [db config user]}]
-;;     (let [google-config (:google-api config)
-;;           front-end-base-url (-> config :front-end :base-url)]
-;;       (if (not code)
-;;         (prepare-email-auth google-config db (:email user))
-;;         (complete-auth-flow front-end-base-url google-config db code state)))))

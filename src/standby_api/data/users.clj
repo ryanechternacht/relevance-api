@@ -12,7 +12,7 @@
    :user_account.image :user_account.public_link
    :user_account.public_link_message :user_account.relevancies 
    :user_account.onboarding_step :user_account.has-send-scope
-   :user_account.created_at])
+   :user_account.has-gmail-modify-scope :user_account.created_at])
 
 (defn- base-user-query []
   (-> (apply h/select user-columns)
@@ -41,8 +41,8 @@
   )
 
 (defn update-user-from-stytch [db email {:keys [first-name last-name image
-                                                has-send-scope refresh-token
-                                                provider-values]}]
+                                                has-send-scope has-gmail-modify-scope 
+                                                refresh-token provider-values]}]
   (try
     (let [updates (cond-> {}
                     (not (str/blank? first-name)) (assoc :first-name first-name)
@@ -51,6 +51,7 @@
                     refresh-token (assoc :refresh-token refresh-token)
                     ;; only update has send scope if it's a new refresh token
                     refresh-token (assoc :has-send-scope has-send-scope)
+                    refresh-token (assoc :has-gmail-modify-scope has-gmail-modify-scope)
                     provider-values (assoc :oauth-token (db/lift provider-values)))
           query (-> (h/update :user_account)
                     (h/set updates)
@@ -66,16 +67,18 @@
   (str first-name "-" last-name "-" (u/get-nano-id-lowercase 6)))
 
 (defn create-user [db email {:keys [first-name last-name image provider-values
-                                    has-send-scope refresh-token]}]
+                                    has-send-scope has-gmail-modify-scope 
+                                    refresh-token]}]
   (let [public-link (get-public-link first-name last-name)
         query (-> (h/insert-into :user_account)
                   (h/columns :email :first_name :last_name :image 
                              :public_link :public_link_message 
-                             :oauth_token :has_send_scope :refresh_token)
+                             :oauth_token :has_send_scope 
+                             :has_gmaily_modify_scope :refresh_token)
                   (h/values [[email first-name last-name image
                               public-link default-profile-message-template
                               (db/lift provider-values) has-send-scope
-                              refresh-token]])
+                              has-gmail-modify-scope refresh-token]])
                   (#(apply h/returning % user-columns)))]
     (->> query
          (db/->>execute db)
