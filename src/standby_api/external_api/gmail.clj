@@ -224,22 +224,19 @@
           (find-label access-token label-name)
           (throw ex))))))
 
+(defn- get-header-value [thread header]
+  (let [first-message-headers (-> thread :messages first :payload :headers)]
+    (->> first-message-headers
+         (filter #(= (:name %) header))
+         first
+         :value)))
+
 (defn- get-info-to-thread
   "pulls out the fields we need to make sure this email threads correctly"
   [thread]
-  (let [first-message-headers (-> thread :messages first :payload :headers)]
-    {:message-id (->> first-message-headers
-                      (filter #(= (:name %) "Message-ID"))
-                      first
-                      :value)
-     :subject (->> first-message-headers
-                   (filter #(= (:name %) "Subject"))
-                   first
-                   :value)
-     :recipient (->> first-message-headers
-                     (filter #(= (:name %) "From"))
-                     first
-                     :value)}))
+  {:message-id (get-header-value thread "Message-ID")
+   :subject (get-header-value thread "Subject")
+   :recipient (get-header-value thread "From")})
 
 ;; Appropriately formatted email should look like this
 
@@ -326,3 +323,13 @@
     (gmail-api-post access-token
                     "users/me/messages/send"
                     {:raw (base64-url-encode email-text)})))
+
+(defn is-marketing-or-transactional-email? [thread]
+  (let [from (str/lower-case (get-header-value thread "From"))
+        reply-to (str/lower-case (get-header-value thread "Reply-To"))
+        unsubscribe (get-header-value thread "List-Unsubscribe")]
+    (or (str/includes? from "no-reply")
+        (str/includes? reply-to "no-reply")
+        (str/includes? from "notifications")
+        (str/includes? from "marketing")
+        unsubscribe)))
