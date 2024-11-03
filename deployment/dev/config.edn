@@ -1,0 +1,21 @@
+{:back-end {:base-url "https://api.swaypage.io"}
+ :cookie-attrs {:domain "swaypage.io"
+                :secure true
+                :same-site :lax}
+ :debug {:print? :prod}
+ :front-end {:base-url "https://app.swaypage.io"}
+ :google-api {:client-id ""
+              :redirect-uri "https://api.swaypage.io/v0.1/gmail-approval"
+              :client-secret ""}
+ :open-ai {:api-key ""}
+ :pg-db {:dbtype "postgresql"
+         :dbname "relevance"
+         :host ""
+         :user "postgres"
+         :password ""
+         :ssl false}
+ :stytch {:project ""
+          :secret ""
+          :public-token ""
+          :base-url "https://test.stytch.com/v1/"
+          :redirect-url "https://api.swaypage.io/v0.1/login"}}

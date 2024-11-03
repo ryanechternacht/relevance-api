@@ -1,0 +1,21 @@
+{:back-end {:base-url "https://api.relevance.to"}
+ :cookie-attrs {:domain "relevance.to"
+                :secure true
+                :same-site :lax}
+ :debug {:print? :prod}
+ :front-end {:base-url "https://app.relevance.to"}
+ :google-api {:client-id ""
+              :redirect-uri "https://api.relevance.to/v0.1/gmail-approval"
+              :client-secret ""}
+ :open-ai {:api-key ""}
+ :pg-db {:dbtype "postgresql"
+         :dbname "relevance"
+         :host ""
+         :user "postgres"
+         :password ""
+         :ssl false}
+ :stytch {:project ""
+          :secret ""
+          :public-token ""
+          :base-url "https://api.stytch.sharepage.io/v1/"
+          :redirect-url "https://api.relevance.to/v0.1/login"}}

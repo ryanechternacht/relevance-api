@@ -1,0 +1,22 @@
+{:back-end {:base-url "http://api.buyersphere-local.com"}
+ :cookie-attrs {:domain "buyersphere-local.com"}
+ :debug {:print? :local}
+ :front-end {:base-url "http://app.buyersphere-local.com"}
+ :google-api {:client-id ""
+              :redirect-uri "https://api.buyersphere-local.com/v0.1/gmail-approval"
+              :client-secret ""}
+ :open-ai {:api-key ""}
+ :pg-db {:dbtype "postgresql"
+         :dbname "relevance"
+         :host "127.0.0.1"
+         :user "ryanechternacht"
+         :password nil
+         :ssl false}
+ :salesforce {:client-id ""
+              :client-secret ""
+              :redirect-uri "https://e4eb-71-67-100-96.ngrok-free.app/v0.1/auth/salesforce"}
+ :stytch {:project ""
+          :secret ""
+          :public-token ""
+          :base-url "https://test.stytch.com/v1/"
+          :redirect-url "http://api.buyersphere-local.com/v0.1/login"}}
